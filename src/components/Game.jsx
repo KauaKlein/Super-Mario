@@ -10,44 +10,56 @@ export const Game = () => {
       constructor() {
         super("MainScene");
       }
+
       preload() {
         this.load.image("player", "/Mario.webp");
-        this.load.image("chao", "/chao.webp")
+        this.load.image("chao", "/chao.webp");
       }
 
-      geraChao(){
-        this.chaoGroup = this.physics.add.staticGroup();
+      geraChao() {
+        this.chaoGroup = this.physics.add.staticGroup(); 
 
-        for(let i = 0; i < 20; i++){
-          this.chao = this.add.sprite(0, 400, "chao");
-          this.chao.setOrigin(-i, -1.68);
-          this.chao.setScale(0.17);
+        for (let i = 0; i < 20; i++) {
+          const bloco = this.chaoGroup.create(i * 62, 550, "chao");
+          bloco.setScale(0.17).refreshBody();
         }
       }
 
       create() {
-        this.player = this.add.sprite(0, 400, "player");
-        this.player.setOrigin(0, 0);
+        this.player = this.physics.add.sprite(100, 100, "player");
         this.player.setScale(0.17);
-        this.geraChao()
+        this.player.setCollideWorldBounds(true);
+
+        this.geraChao();
+
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        //segue o mario ai 
+
+        this.physics.add.collider(this.player, this.chaoGroup);
+
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 1600, 600);
+        this.physics.world.setBounds(0, 0, 1600, 600);
       }
+
       update() {
-        if(this.cursors.right.isDown && this.cursors.left.isDown){
-           this.player.x += 0;
-        }else if (this.cursors.right.isDown) {
-          this.player.x += 6;
-          this.player.flipX = false; 
+        if (this.cursors.right.isDown && this.cursors.left.isDown) {
+          this.player.setVelocityX(0);
+        } else if (this.cursors.right.isDown) {
+          this.player.setVelocityX(400);
+          this.player.flipX = false;
         } else if (this.cursors.left.isDown) {
-          this.player.x -= 6;
-          this.player.flipX = true; 
+          this.player.setVelocityX(-400);
+          this.player.flipX = true;
+        } else {
+          this.player.setVelocityX(0);
+        }
+        if (this.cursors.up.isDown && this.player.body.touching.down) {
+          this.player.setVelocityY(-500);
         }
       }
     }
+
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
@@ -57,13 +69,15 @@ export const Game = () => {
         physics: {
           default: "arcade",
           arcade: {
-            gravity: { y: 0 },
+            gravity: { y: 800 }, 
+            debug: false,
           },
         },
         scene: MainScene,
         parent: gameRef.current,
       });
     }
+
     return () => {
       if (phaserGameRef.current) {
         phaserGameRef.current.destroy(true);
