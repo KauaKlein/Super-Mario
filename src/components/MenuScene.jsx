@@ -6,15 +6,31 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("bgMenu", "/MenuPrincipal.png"); 
+    this.load.image("bgMenu", "/MenuPrincipal.png");
+    this.load.audio("temaMenu", "/menu.mp3");
   }
-
+  
   create() {
     this.add.image(395, 295, "bgMenu").setScale(0.66);
-
+  
+    const volumeSalvo = localStorage.getItem("config_volume");
+    const volumeFinal = volumeSalvo !== null ? parseInt(volumeSalvo) / 10 : 0.5;
+  
+    this.musica = this.sound.add("temaMenu", {
+      volume: volumeFinal,
+      loop: true
+    });
+  
+    this.input.keyboard.once("keydown", () => {
+      if (!this.musica.isPlaying) this.musica.play();
+    });
+  
+    // ... resto do código do menu
+    // Opções do menu
     const opcoes = ["PLAYER 1", "CONFIGURAÇÃO"];
     this.opcaoSelecionada = 0;
 
+    // Renderiza texto das opções
     this.textos = opcoes.map((texto, index) =>
       this.add.text(250, 300 + index * 40, texto, {
         fontFamily: "SuperMario",
@@ -31,8 +47,8 @@ export default class MenuScene extends Phaser.Scene {
         },
       })
     );
-    
 
+    // Navegação ↑ ↓
     this.input.keyboard.on("keydown-UP", () => {
       this.atualizaSelecao(-1);
     });
@@ -41,22 +57,24 @@ export default class MenuScene extends Phaser.Scene {
       this.atualizaSelecao(1);
     });
 
+    // ENTER para iniciar ou abrir configuração
     this.input.keyboard.on("keydown-ENTER", () => {
-      if (this.opcaoSelecionada < 3) {
-        this.scene.start("MainScene");
-      } else {
-        console.log("ERASE DATA acionado");
+      this.musica.stop(); // Para a música antes de sair da cena
+      if (this.opcaoSelecionada === 0) {
+        this.scene.start("MainScene"); // Inicia o jogo
+      } else if (this.opcaoSelecionada === 1) {
+        this.scene.start("ConfigScene"); // Vai para configurações
       }
     });
   }
 
   atualizaSelecao(direcao) {
-    this.textos[this.opcaoSelecionada].setColor("#ffffff");
+    this.textos[this.opcaoSelecionada].setColor("#ffffff"); // Reseta anterior
     this.opcaoSelecionada = Phaser.Math.Wrap(
       this.opcaoSelecionada + direcao,
       0,
       this.textos.length
     );
-    this.textos[this.opcaoSelecionada].setColor("#ffff00");
+    this.textos[this.opcaoSelecionada].setColor("#ffff00"); // Destaca atual
   }
 }

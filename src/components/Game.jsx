@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import MenuScene from "./MenuScene";
-
+import ConfigScene from "./ConfigScene";
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -14,6 +14,7 @@ export const Game = () => {
       }
       preload() {
         this.load.image("chao", "/Chao.png");
+        this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.spritesheet("teste", "/MarioMiniSpritesheet.png", {
           frameWidth: 16,
           frameHeight: 22,
@@ -41,7 +42,11 @@ export const Game = () => {
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.physics.add.collider(this.player, this.chaoGroup);
-
+        this.musica = this.sound.add("temaYoshi", {
+          volume: 0.5,
+          loop: true,
+        });
+        this.musica.play();
         //segue o mario ai
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 2000, 600);
@@ -72,7 +77,6 @@ export const Game = () => {
         });
       }
       update() {
-        
         //Movimentação eixo X
 
         if (this.cursors.right.isDown) {
@@ -131,7 +135,7 @@ export const Game = () => {
             debug: true,
           },
         },
-        scene: [MenuScene, MainScene],
+        scene: [MenuScene, MainScene, ConfigScene],
         parent: gameRef.current,
       });
     }
