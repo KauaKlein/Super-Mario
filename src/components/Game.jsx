@@ -15,16 +15,25 @@ export const Game = () => {
       preload() {
         this.load.image("chao", "/Chao.png");
         this.load.image("goomba", "/Goomba.png");
-        this.load.spritesheet("teste", "/MarioMiniSpritesheet.png", {
+        this.load.image("MarioAgachado", "/MarioAgachado.png");
+        this.load.spritesheet("MarioGameOver", "/MarioGameOver.png", {
           frameWidth: 16,
-          frameHeight: 22,
+          frameHeight: 24,
         });
+        this.load.spritesheet(
+          "MiniMarioSpriteSheet",
+          "/MarioMiniSpritesheet.png",
+          {
+            frameWidth: 16,
+            frameHeight: 22,
+          }
+        );
       }
 
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 5; i++) {
           const chao = this.chaoGroup.create(i * 900, 500, "chao");
           chao.setOrigin(0, 0);
           chao.setScale(0.75);
@@ -42,8 +51,12 @@ export const Game = () => {
 
       create() {
         this.colidiuComgoomba = false;
-
-        this.player = this.physics.add.sprite(0, 300, "teste", 2);
+        this.player = this.physics.add.sprite(
+          0,
+          300,
+          "MiniMarioSpriteSheet",
+          2
+        );
         this.player.setCollideWorldBounds(true);
         this.player.setBounce(0);
         this.player.setOrigin(0, 0);
@@ -74,8 +87,8 @@ export const Game = () => {
         this.anims.create({
           key: "andando",
           frames: [
-            { key: "teste", frame: 3 },
-            { key: "teste", frame: 2 },
+            { key: "MiniMarioSpriteSheet", frame: 3 },
+            { key: "MiniMarioSpriteSheet", frame: 2 },
           ],
           frameRate: 12,
           repeat: -1,
@@ -83,19 +96,29 @@ export const Game = () => {
 
         this.anims.create({
           key: "parado",
-          frames: [{ key: "teste", frame: 2 }],
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
         });
 
         this.anims.create({
           key: "pulando",
-          frames: [{ key: "teste", frame: 1 }],
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 1 }],
           frameRate: 1,
         });
 
         this.anims.create({
           key: "caindo",
-          frames: [{ key: "teste", frame: 0 }],
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
           frameRate: 1,
+        });
+        this.anims.create({
+          key: "game over",
+          //A ser implementado função game over
+          frames: [
+            { key: "MarioGameOver", frame: 0 },
+            { key: "MarioGameOver", frame: 1 },
+          ],
+          frameRate: 8,
+          repeat: -1,
         });
       }
 
@@ -118,9 +141,21 @@ export const Game = () => {
       // }
 
       update() {
-        if (this.cursors.right.isDown) {
+        //Movimentação eixo X
+        if (this.cursors.left.isDown && this.cursors.right.isDown) {
+          this.player.x += 0;
+          //e esses para nao ficar repetindo animação de ficar parado atoa quando ja esta parado
+          if (this.player.anims.currentAnim?.key !== "parado") {
+            this.player.anims.play("parado");
+          }
+        } else if (this.cursors.down.isDown) {
+          if (this.player.anims.currentAnim?.key !== "MarioAgachado") {
+            this.player.setTexture("MarioAgachado");
+          }
+        } else if (this.cursors.right.isDown) {
           this.player.x += 10;
           this.player.flipX = false;
+          //esses Ifs sao para as animações não ficarem repetindo infinitamente
           if (this.player.anims.currentAnim?.key !== "andando") {
             this.player.anims.play("andando");
           }
@@ -135,23 +170,23 @@ export const Game = () => {
             this.player.anims.play("parado");
           }
         }
-
+        //Movimentação eixo Y
         if (this.player.body.velocity.y < 0) {
           if (this.player.anims.currentAnim?.key !== "pulando") {
             this.player.anims.play("pulando");
           }
-        } else if (this.player.body.velocity.y > 0) {
+        }
+        if (this.player.body.velocity.y > 0) {
           if (this.player.anims.currentAnim?.key !== "caindo") {
             this.player.anims.play("caindo");
           }
         }
-
         if (this.cursors.up.isDown && this.player.body.touching.down) {
           this.player.setVelocityY(-1500);
         }
       }
     }
-
+    
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
@@ -162,7 +197,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
+            debug: false,
           },
         },
         scene: MainScene,
