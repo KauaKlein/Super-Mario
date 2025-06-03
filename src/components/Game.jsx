@@ -6,20 +6,19 @@ import ConfigScene from "./ConfigScene";
 export const Game = () => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
+  const GameOver = false
 
   useEffect(() => {
     class MainScene extends Phaser.Scene {
       constructor() {
         super("MainScene");
       }
+
       preload() {
         this.load.image("chao", "/Chao.png");
         this.load.image("MarioAgachado", "/MarioAgachado.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
-        this.load.spritesheet("teste", "/MarioMiniSpritesheet.png", {
-          frameWidth: 16,
-          frameHeight: 22,
-        });
+        this.load.image("goomba", "/Goomba.png");
         this.load.spritesheet("MarioGameOver", "/MarioGameOver.png", {
           frameWidth: 16,
           frameHeight: 24,
@@ -45,7 +44,16 @@ export const Game = () => {
         }
       }
 
+      criagoomba() {
+        this.goombaGroup = this.physics.add.staticGroup();
+        const goomba = this.goombaGroup.create(500, 460, "goomba");
+        goomba.setOrigin(0, 0);
+        goomba.setScale(0.2);
+        goomba.refreshBody();
+      }
+
       create() {
+        this.colidiuComgoomba = false;
         this.player = this.physics.add.sprite(
           0,
           300,
@@ -56,16 +64,29 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 0);
         this.player.setScale(3);
+
         this.geraChao();
+        this.criagoomba();
+
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
+
         this.physics.add.collider(this.player, this.chaoGroup);
 
-        //segue o mario ai
+        // colisão com goomba
+        this.physics.add.collider(
+          this.player,
+          this.goombaGroup,
+          this.onPlayerHitObstacle,
+          null,
+          this
+        );
+
+        // câmera seguindo o Mario
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 2000, 600);
 
-        //Animação Mini Mario
+        // animações
         this.anims.create({
           key: "andando",
           frames: [
@@ -75,15 +96,18 @@ export const Game = () => {
           frameRate: 12,
           repeat: -1,
         });
+
         this.anims.create({
           key: "parado",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
         });
+
         this.anims.create({
           key: "pulando",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 1 }],
           frameRate: 1,
         });
+
         this.anims.create({
           key: "caindo",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
@@ -99,7 +123,36 @@ export const Game = () => {
           frameRate: 8,
           repeat: -1,
         });
+        this.anims.create({
+          key: "game over",
+          //A ser implementado função game over
+          frames: [
+            { key: "MarioGameOver", frame: 0 },
+            { key: "MarioGameOver", frame: 1 },
+          ],
+          frameRate: 8,
+          repeat: -1,
+        });
       }
+
+      onPlayerHitObstacle(player, goomba) {
+        if (this.colidiuComgoomba) return;
+
+        this.colidiuComgoomba = true;
+        console.log("Colisão detectada!");
+        player.setTint(0xff0000);
+        this.gameOver();
+      }
+
+      gameOver() {
+        this.cameras.main.fadeOut(1000);
+      }
+
+      // collectCoin(player, coin) {
+      //   coin.disableBody(true, true);
+      //   console.log("Moeda coletada!");
+      // }
+
       update() {
         //Movimentação eixo X
         if (this.cursors.left.isDown && this.cursors.right.isDown) {
@@ -146,6 +199,7 @@ export const Game = () => {
         }
       }
     }
+    
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
@@ -163,6 +217,7 @@ export const Game = () => {
         parent: gameRef.current,
       });
     }
+
     return () => {
       if (phaserGameRef.current) {
         phaserGameRef.current.destroy(true);
