@@ -49,6 +49,8 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 0);
         this.player.setScale(3);
+        this.player.isAgachado = false;
+        this.player.isOlhandoFrente = true;
         this.geraChao();
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -101,20 +103,29 @@ export const Game = () => {
           if (this.player.anims.currentAnim?.key !== "parado") {
             this.player.anims.play("parado");
           }
-        } else if (this.cursors.down.isDown) {
-          if (this.player.anims.currentAnim?.key !== "MarioAgachado") {
-            this.player.setTexture("MarioAgachado");
+        } else if (this.cursors.down.isDown && !this.player.isAgachado) {
+          this.player.isAgachado = true;
+          this.player.setTexture("MarioAgachado");
+          if (this.cursors.left.isDown && this.player.isOlhandoFrente) {
+            this.player.flipX = true;
+          } else {
+            this.player.flipX = false;
           }
-        } else if (this.cursors.right.isDown) {
+        } else if (!this.cursors.down.isDown && this.player.isAgachado) {
+          this.player.isAgachado = false;
+          this.player.anims.play("parado");
+        } else if (this.cursors.right.isDown && !this.player.isAgachado) {
           this.player.x += 10;
           this.player.flipX = false;
+          this.player.isOlhandoFrente = false;
           //esses Ifs sao para as animações não ficarem repetindo infinitamente
           if (this.player.anims.currentAnim?.key !== "andando") {
             this.player.anims.play("andando");
           }
-        } else if (this.cursors.left.isDown) {
+        } else if (this.cursors.left.isDown && !this.player.isAgachado) {
           this.player.x -= 10;
           this.player.flipX = true;
+          this.player.isOlhandoFrente = true;
           if (this.player.anims.currentAnim?.key !== "andando") {
             this.player.anims.play("andando");
           }
@@ -149,7 +160,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: false,
+            debug: true,
           },
         },
         scene: MainScene,
