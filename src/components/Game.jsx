@@ -15,6 +15,8 @@ export const Game = () => {
       }
 
       preload() {
+        this.load.image("game", "/game.png");
+        this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
         this.load.image("MarioAgachado", "/MarioAgachado.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
@@ -123,29 +125,56 @@ export const Game = () => {
           frameRate: 8,
           repeat: -1,
         });
-        this.anims.create({
-          key: "game over",
-          //A ser implementado função game over
-          frames: [
-            { key: "MarioGameOver", frame: 0 },
-            { key: "MarioGameOver", frame: 1 },
-          ],
-          frameRate: 8,
-          repeat: -1,
-        });
+        if (!this.anims.exists("game over")) {
+          this.anims.create({
+            key: "game over",
+            frames: [
+              { key: "MarioGameOver", frame: 0 },
+              { key: "MarioGameOver", frame: 1 },
+            ],
+            frameRate: 8,
+            repeat: -1,
+          });
+        }
       }
 
       onPlayerHitObstacle(player, goomba) {
         if (this.colidiuComgoomba) return;
 
+        this.gameOver();
         this.colidiuComgoomba = true;
         console.log("Colisão detectada!");
         player.setTint(0xff0000);
-        this.gameOver();
       }
 
       gameOver() {
+        this.physics.pause();
+        this.player.anims.play("game over", true);
+        this.player.setTint(0xff0000);
+      
         this.cameras.main.fadeOut(1000);
+      
+        this.cameras.main.once("camerafadeoutcomplete", () => {
+          const centerX = this.cameras.main.centerX;
+          const centerY = this.cameras.main.centerY;
+      
+          const gameImg = this.add.image(-200, centerY, "game").setScale(2);
+          const overImg = this.add.image(this.cameras.main.width + 200, centerY, "over").setScale(2);
+      
+          this.tweens.add({
+            targets: gameImg,
+            x: centerX - 150,
+            duration: 1000,
+            ease: "Power2",
+          });
+      
+          this.tweens.add({
+            targets: overImg,
+            x: centerX + 150,
+            duration: 1000,
+            ease: "Power2",
+          });
+        });
       }
 
       // collectCoin(player, coin) {
