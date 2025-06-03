@@ -6,7 +6,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
-    this.cameras.main.setBackgroundColor("#1414b8")
+    this.cameras.main.setBackgroundColor("#ffffff")
     this.add.text(320, 280, "Carregando...", {
       fontFamily: "sans-serif",
       fontSize: "24px",

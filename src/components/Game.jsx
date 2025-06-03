@@ -3,7 +3,7 @@ import Phaser from "phaser";
 import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
 import PreloadScene from "./PreloadScene"
-
+import PauseScene from "./PauseScene"
 
 
 
@@ -58,6 +58,11 @@ export const Game = () => {
       }
 
       create() {
+        this.cursors = this.input.keyboard.createCursorKeys()
+        this.input.keyboard.on("keydown-ESC", () => {
+        this.scene.launch("PauseScene")
+        this.scene.pause()
+      })
         this.colidiuComgoomba = false;
         this.player = this.physics.add.sprite(
           0,
@@ -218,7 +223,7 @@ export const Game = () => {
             debug: false,
           },
         },
-        scene: [PreloadScene, MenuScene, MainScene, ConfigScene],
+        scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
         parent: gameRef.current,
       });
     }
