@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "SuperMario";
+  src: url("/fonts/SuperMario256.ttf") format("truetype");
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
 @import "tailwindcss";
 
 :root {

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
+import MenuScene from "./MenuScene";
+
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -129,7 +131,7 @@ export const Game = () => {
             debug: true,
           },
         },
-        scene: MainScene,
+        scene: [MenuScene, MainScene],
         parent: gameRef.current,
       });
     }
