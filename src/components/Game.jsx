@@ -2,6 +2,11 @@ import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
+import PreloadScene from "./PreloadScene"
+
+
+
+
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -213,7 +218,7 @@ export const Game = () => {
             debug: false,
           },
         },
-        scene: [MenuScene, MainScene, ConfigScene],
+        scene: [PreloadScene, MenuScene, MainScene, ConfigScene],
         parent: gameRef.current,
       });
     }
