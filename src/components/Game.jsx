@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
+import { GameOver } from "./GameOver";
+import Movimentacao from "./Movimentacao";
 
 export const Game = () => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
-  const GameOver = false
 
   useEffect(() => {
     class MainScene extends Phaser.Scene {
@@ -37,7 +38,6 @@ export const Game = () => {
 
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
-
         for (let i = 0; i < 5; i++) {
           const chao = this.chaoGroup.create(i * 900, 500, "chao");
           chao.setOrigin(0, 0);
@@ -56,6 +56,8 @@ export const Game = () => {
 
       create() {
         this.colidiuComgoomba = false;
+        this.isGameOver = false;
+
         this.player = this.physics.add.sprite(
           0,
           300,
@@ -72,11 +74,9 @@ export const Game = () => {
 
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
-
         this.physics.add.collider(this.player, this.chaoGroup);
 
-        // colisão com goomba
-        this.physics.add.collider(
+        this.goombaCollider = this.physics.add.collider(
           this.player,
           this.goombaGroup,
           this.onPlayerHitObstacle,
@@ -84,11 +84,14 @@ export const Game = () => {
           this
         );
 
-        // câmera seguindo o Mario
+        this.chaoCollider = this.physics.add.collider(
+          this.player,
+          this.chaoGroup
+        );
+
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 2000, 600);
 
-        // animações
         this.anims.create({
           key: "andando",
           frames: [
@@ -115,16 +118,7 @@ export const Game = () => {
           frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
           frameRate: 1,
         });
-        this.anims.create({
-          key: "game over",
-          //A ser implementado função game over
-          frames: [
-            { key: "MarioGameOver", frame: 0 },
-            { key: "MarioGameOver", frame: 1 },
-          ],
-          frameRate: 8,
-          repeat: -1,
-        });
+
         if (!this.anims.exists("game over")) {
           this.anims.create({
             key: "game over",
@@ -132,103 +126,26 @@ export const Game = () => {
               { key: "MarioGameOver", frame: 0 },
               { key: "MarioGameOver", frame: 1 },
             ],
-            frameRate: 8,
+            frameRate: 12,
             repeat: -1,
           });
         }
       }
 
-      onPlayerHitObstacle(player, goomba) {
+      onPlayerHitObstacle() {
         if (this.colidiuComgoomba) return;
-
-        this.gameOver();
         this.colidiuComgoomba = true;
         console.log("Colisão detectada!");
-        player.setTint(0xff0000);
+        GameOver(this);
       }
-
-      gameOver() {
-        this.physics.pause();
-        this.player.anims.play("game over", true);
-        this.player.setTint(0xff0000);
-      
-        this.cameras.main.fadeOut(1000);
-      
-        this.cameras.main.once("camerafadeoutcomplete", () => {
-          const centerX = this.cameras.main.centerX;
-          const centerY = this.cameras.main.centerY;
-      
-          const gameImg = this.add.image(-200, centerY, "game").setScale(2);
-          const overImg = this.add.image(this.cameras.main.width + 200, centerY, "over").setScale(2);
-      
-          this.tweens.add({
-            targets: gameImg,
-            x: centerX - 150,
-            duration: 1000,
-            ease: "Power2",
-          });
-      
-          this.tweens.add({
-            targets: overImg,
-            x: centerX + 150,
-            duration: 1000,
-            ease: "Power2",
-          });
-        });
-      }
-
-      // collectCoin(player, coin) {
-      //   coin.disableBody(true, true);
-      //   console.log("Moeda coletada!");
-      // }
 
       update() {
-        //Movimentação eixo X
-        if (this.cursors.left.isDown && this.cursors.right.isDown) {
-          this.player.x += 0;
-          //e esses para nao ficar repetindo animação de ficar parado atoa quando ja esta parado
-          if (this.player.anims.currentAnim?.key !== "parado") {
-            this.player.anims.play("parado");
-          }
-        } else if (this.cursors.down.isDown) {
-          if (this.player.anims.currentAnim?.key !== "MarioAgachado") {
-            this.player.setTexture("MarioAgachado");
-          }
-        } else if (this.cursors.right.isDown) {
-          this.player.x += 10;
-          this.player.flipX = false;
-          //esses Ifs sao para as animações não ficarem repetindo infinitamente
-          if (this.player.anims.currentAnim?.key !== "andando") {
-            this.player.anims.play("andando");
-          }
-        } else if (this.cursors.left.isDown) {
-          this.player.x -= 10;
-          this.player.flipX = true;
-          if (this.player.anims.currentAnim?.key !== "andando") {
-            this.player.anims.play("andando");
-          }
-        } else {
-          if (this.player.anims.currentAnim?.key !== "parado") {
-            this.player.anims.play("parado");
-          }
-        }
-        //Movimentação eixo Y
-        if (this.player.body.velocity.y < 0) {
-          if (this.player.anims.currentAnim?.key !== "pulando") {
-            this.player.anims.play("pulando");
-          }
-        }
-        if (this.player.body.velocity.y > 0) {
-          if (this.player.anims.currentAnim?.key !== "caindo") {
-            this.player.anims.play("caindo");
-          }
-        }
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-          this.player.setVelocityY(-1500);
+        if (!this.isGameOver) {
+          Movimentacao(this);
         }
       }
     }
-    
+
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
