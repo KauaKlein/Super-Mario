@@ -36,7 +36,10 @@ export const Game = () => {
           frameWidth: 16,
           frameHeight: 24,
         });
-
+        this.load.spritesheet("Moedas", "/Moedas.png", {
+          frameWidth: 12,
+          frameHeight: 16,
+        });
         this.load.spritesheet(
           "MiniMarioSpriteSheet",
           "/MiniMarioSpritesheet.png",
@@ -65,7 +68,17 @@ export const Game = () => {
           chao.refreshBody();
         }
       }
-
+      criaMoeda() {
+        this.moedaGroup = this.physics.add.group();
+        for (let i = 1; i < 6; i++) {
+          const moeda = this.moedaGroup.create(i * 300, 430, "Moedas");
+          moeda.anims.play("animacaoMoeda");
+          moeda.setImmovable(false);
+          moeda.setScale(3);
+          moeda.body.allowGravity = false;
+          moeda.setDepth(1);
+        }
+      }
       criagoomba() {
         this.goombaGroup = this.physics.add.group();
         for (let i = 1; i <= 5; i++) {
@@ -75,7 +88,7 @@ export const Game = () => {
             "SpriteSheetGoomba",
             0
           );
-          goomba.anims.play("goombaMovendo", true);
+          goomba.anims.play("goombaMovendo");
           goomba.setScale(3);
           goomba.setOrigin(0.5, 1);
           goomba.setVelocityX(-150);
@@ -106,6 +119,17 @@ export const Game = () => {
           frameRate: 5,
           repeat: -1,
         });
+        this.anims.create({
+          key: "animacaoMoeda",
+          frames: [
+            { key: "Moedas", frame: 0 },
+            { key: "Moedas", frame: 1 },
+            { key: "Moedas", frame: 2 },
+            { key: "Moedas", frame: 3 },
+          ],
+          frameRate: 7,
+          repeat: -1,
+        });
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.keyboard.on("keydown-ESC", () => {
@@ -114,7 +138,7 @@ export const Game = () => {
         });
         this.colidiuComgoomba = false;
         this.isGameOver = false;
-
+        this.criaMoeda();
         this.geraFundo();
         this.player = this.physics.add.sprite(
           0,

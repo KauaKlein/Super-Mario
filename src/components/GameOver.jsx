@@ -41,13 +41,13 @@ export function GameOver(scene) {
 
         const gameImg = scene.add
           .image(-300, centerY, "game")
-          .setScale(2)
+          .setScale(5)
           .setScrollFactor(0)
           .setDepth(100);
 
         const overImg = scene.add
           .image(scene.cameras.main.width + 300, centerY, "over")
-          .setScale(2)
+          .setScale(5)
           .setScrollFactor(0)
           .setDepth(100);
 
