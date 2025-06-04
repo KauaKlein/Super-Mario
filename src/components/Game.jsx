@@ -12,6 +12,7 @@ export const Game = () => {
       }
       preload() {
         this.load.image("chao", "/Chao.png");
+        this.load.image("Background", "/Background.png");
         this.load.spritesheet("MarioAgachado", "/MarioAgachado.png", {
           frameWidth: 16,
           frameHeight: 16,
@@ -29,7 +30,16 @@ export const Game = () => {
           }
         );
       }
-
+      geraFundo() {
+        for (let i = 0; i < 5; i++) {
+          this.add
+            .image(i * 715, 0, "Background")
+            .setScale(1.4)
+            .setOrigin(0, 0)
+            .setFlipX(true)
+            .setScrollFactor(0.1);
+        }
+      }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
 
@@ -42,6 +52,7 @@ export const Game = () => {
       }
 
       create() {
+        this.geraFundo();
         this.player = this.physics.add.sprite(
           0,
           300,
@@ -52,6 +63,8 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 1);
         this.player.setScale(3);
+        this.player.setMaxVelocity(500,1600);
+        this.player.setDragX(2000)
         this.player.isAgachado = false;
         this.player.wasAgachado = false;
         this.player.isOlhandoFrente = true;
@@ -133,7 +146,6 @@ export const Game = () => {
         });
       }
       update() {
-
         //Klein, NÃO mexe nisso, eu não vou saber fazer de novo, prioriza o meu  ao do Ale
         this.player.isIndoEsquerda = this.cursors.left.isDown;
         this.player.isIndoDireita = this.cursors.right.isDown;
@@ -142,13 +154,12 @@ export const Game = () => {
         this.player.isAgachando = this.cursors.down.isDown;
         this.player.isSubindo = this.player.body.velocity.y < 0;
         this.player.isDescendo = this.player.body.velocity.y > 0;
-        
 
         if (this.player.isAgachando) {
           this.player.wasAgachado = true;
           this.player.body.setOffset(0, 5);
           this.player.body.setSize(16, 12);
-        } else if (!this.player.isAgachando &&  this.player.wasAgachado) {
+        } else if (!this.player.isAgachando && this.player.wasAgachado) {
           this.player.y -= 2;
 
           this.player.wasAgachado = false;
@@ -156,16 +167,15 @@ export const Game = () => {
           this.player.body.setOffset(0, 0);
         }
 
-        let velocidade = 0;
-
         if (this.player.isIndoEsquerda && !this.player.isAgachando) {
-          velocidade = -700;
+          this.player.setAccelerationX(-3000)
           this.player.isOlhandoFrente = false;
         } else if (this.player.isIndoDireita && !this.player.isAgachando) {
-          velocidade = 700;
+          this.player.setAccelerationX(3000)
           this.player.isOlhandoFrente = true;
+        } else{
+          this.player.setAccelerationX(0)
         }
-        this.player.setVelocityX(velocidade);
 
         if (this.player.isPulando) {
           this.player.setVelocityY(-1600);
@@ -206,7 +216,7 @@ export const Game = () => {
           return;
         }
 
-        if (velocidade !== 0) {
+        if (this.player.body.velocity.x !== 0) {
           const anim = this.player.isOlhandoFrente
             ? "andandoFrente"
             : "andandoCosta";
@@ -233,7 +243,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
+            // debug: true,
           },
         },
         scene: MainScene,
