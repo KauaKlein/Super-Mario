@@ -4,11 +4,8 @@ import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
-import PreloadScene from "./PreloadScene"
-import PauseScene from "./PauseScene"
-
-
-
+import PreloadScene from "./PreloadScene";
+import PauseScene from "./PauseScene";
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -25,9 +22,12 @@ export const Game = () => {
         this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
-        this.load.image("goomba", "/Goomba.png");
-
         this.load.image("Background", "/Background.png");
+
+        this.load.spritesheet("SpriteSheetGoomba", "/SpriteSheetGoomba.png", {
+          frameWidth: 16,
+          frameHeight: 16,
+        });
         this.load.spritesheet("MarioAgachado", "/MarioAgachado.png", {
           frameWidth: 16,
           frameHeight: 16,
@@ -69,8 +69,14 @@ export const Game = () => {
       criagoomba() {
         this.goombaGroup = this.physics.add.group();
         for (let i = 1; i <= 5; i++) {
-          const goomba = this.goombaGroup.create(i * 300, 430, "goomba");
-          goomba.setScale(0.2);
+          const goomba = this.goombaGroup.create(
+            i * 300,
+            430,
+            "SpriteSheetGoomba",
+            0
+          );
+          goomba.anims.play("goombaMovendo", true);
+          goomba.setScale(3);
           goomba.setOrigin(0.5, 1);
           goomba.setVelocityX(-150);
           goomba.setCollideWorldBounds(true);
@@ -91,11 +97,21 @@ export const Game = () => {
       }
 
       create() {
-        this.cursors = this.input.keyboard.createCursorKeys()
+        this.anims.create({
+          key: "goombaMovendo",
+          frames: [
+            { key: "SpriteSheetGoomba", frame: 0 },
+            { key: "SpriteSheetGoomba", frame: 1 },
+          ],
+          frameRate: 5,
+          repeat: -1,
+        });
+
+        this.cursors = this.input.keyboard.createCursorKeys();
         this.input.keyboard.on("keydown-ESC", () => {
-        this.scene.launch("PauseScene")
-        this.scene.pause()
-      })
+          this.scene.launch("PauseScene");
+          this.scene.pause();
+        });
         this.colidiuComgoomba = false;
         this.isGameOver = false;
 
@@ -117,8 +133,8 @@ export const Game = () => {
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
 
-        this.player.setMaxVelocity(500,1600);
-        this.player.setDragX(2000)
+        this.player.setMaxVelocity(500, 1600);
+        this.player.setDragX(2000);
         this.player.isAgachado = false;
         this.player.wasAgachado = false;
         this.player.isOlhandoFrente = true;
@@ -240,16 +256,15 @@ export const Game = () => {
           frames: [{ key: "MarioAgachado", frame: 1 }],
           frameRate: 1,
         });
-
         this.anims.create({
-            key: "game over",
-            frames: [
-              { key: "MarioGameOver", frame: 0 },
-              { key: "MarioGameOver", frame: 1 },
-            ],
-            frameRate: 12,
-            repeat: -1,
-          });
+          key: "game over",
+          frames: [
+            { key: "MarioGameOver", frame: 0 },
+            { key: "MarioGameOver", frame: 1 },
+          ],
+          frameRate: 12,
+          repeat: -1,
+        });
       }
 
       detectaColisaoReal(player, goomba) {
@@ -273,13 +288,11 @@ export const Game = () => {
             goomba.setVelocity(0, 0);
             goomba.body.moves = false;
           }
-        
 
-        GameOver(this);
-        this.physics.world.removeCollider(this.goombaCollider);
+          GameOver(this);
+          this.physics.world.removeCollider(this.goombaCollider);
+        });
       }
-    )
-  }
       update() {
         if (!this.isGameOver) {
           Movimentacao(this);
@@ -307,9 +320,9 @@ export const Game = () => {
         // Atualiza posição do sensor de pisão
         if (this.pisaoSensor && this.player) {
           this.pisaoSensor.x = this.player.body.x + this.player.body.width / 2;
-          this.pisaoSensor.y = this.player.body.y + this.player.body.height + 25;
+          this.pisaoSensor.y =
+            this.player.body.y + this.player.body.height + 25;
         }
-
       }
     }
 
