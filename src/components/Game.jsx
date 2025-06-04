@@ -21,23 +21,36 @@ export const Game = () => {
 
       preload() {
         this.load.image("chao", "/Chao.png");
-        this.load.image("MarioAgachado", "/MarioAgachado.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("goomba", "/Goomba.png");
+        this.load.image("Background", "/Background.png");
+        this.load.spritesheet("MarioAgachado", "/MarioAgachado.png", {
+          frameWidth: 16,
+          frameHeight: 16,
+        });
         this.load.spritesheet("MarioGameOver", "/MarioGameOver.png", {
           frameWidth: 16,
           frameHeight: 24,
         });
         this.load.spritesheet(
           "MiniMarioSpriteSheet",
-          "/MarioMiniSpritesheet.png",
+          "/MiniMarioSpritesheet.png",
           {
             frameWidth: 16,
             frameHeight: 22,
           }
         );
       }
-
+      geraFundo() {
+        for (let i = 0; i < 5; i++) {
+          this.add
+            .image(i * 1022, -200, "Background")
+            .setScale(2)
+            .setOrigin(0, 0)
+            .setFlipX(true)
+            .setScrollFactor(0.1);
+        }
+      }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
 
@@ -64,6 +77,7 @@ export const Game = () => {
         this.scene.pause()
       })
         this.colidiuComgoomba = false;
+        this.geraFundo();
         this.player = this.physics.add.sprite(
           0,
           300,
@@ -72,9 +86,13 @@ export const Game = () => {
         );
         this.player.setCollideWorldBounds(true);
         this.player.setBounce(0);
-        this.player.setOrigin(0, 0);
+        this.player.setOrigin(0, 1);
         this.player.setScale(3);
-
+        this.player.setMaxVelocity(500,1600);
+        this.player.setDragX(2000)
+        this.player.isAgachado = false;
+        this.player.wasAgachado = false;
+        this.player.isOlhandoFrente = true;
         this.geraChao();
         this.criagoomba();
 
@@ -98,7 +116,7 @@ export const Game = () => {
 
         // animações
         this.anims.create({
-          key: "andando",
+          key: "andandoFrente",
           frames: [
             { key: "MiniMarioSpriteSheet", frame: 3 },
             { key: "MiniMarioSpriteSheet", frame: 2 },
@@ -108,19 +126,52 @@ export const Game = () => {
         });
 
         this.anims.create({
-          key: "parado",
+          key: "paradoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
         });
 
         this.anims.create({
-          key: "pulando",
+          key: "pulandoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 1 }],
           frameRate: 1,
         });
 
         this.anims.create({
-          key: "caindo",
+          key: "caindoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "andandoCosta",
+          frames: [
+            { key: "MiniMarioSpriteSheet", frame: 4 },
+            { key: "MiniMarioSpriteSheet", frame: 5 },
+          ],
+          frameRate: 12,
+          repeat: -1,
+        });
+        this.anims.create({
+          key: "paradoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 5 }],
+        });
+        this.anims.create({
+          key: "pulandoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 6 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "caindoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 7 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "olhandoFrente",
+          frames: [{ key: "MarioAgachado", frame: 0 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "olhandoCosta",
+          frames: [{ key: "MarioAgachado", frame: 1 }],
           frameRate: 1,
         });
         this.anims.create({
@@ -164,48 +215,90 @@ export const Game = () => {
       // }
 
       update() {
-        //Movimentação eixo X
-        if (this.cursors.left.isDown && this.cursors.right.isDown) {
-          this.player.x += 0;
-          //e esses para nao ficar repetindo animação de ficar parado atoa quando ja esta parado
-          if (this.player.anims.currentAnim?.key !== "parado") {
-            this.player.anims.play("parado");
+        //Klein, NÃO mexe nisso, eu não vou saber fazer de novo, prioriza o meu  ao do Ale
+        this.player.isIndoEsquerda = this.cursors.left.isDown;
+        this.player.isIndoDireita = this.cursors.right.isDown;
+        this.player.isPulando =
+          this.cursors.up.isDown && this.player.body.touching.down;
+        this.player.isAgachando = this.cursors.down.isDown;
+        this.player.isSubindo = this.player.body.velocity.y < 0;
+        this.player.isDescendo = this.player.body.velocity.y > 0;
+
+        if (this.player.isAgachando) {
+          this.player.wasAgachado = true;
+          this.player.body.setOffset(0, 5);
+          this.player.body.setSize(16, 12);
+        } else if (!this.player.isAgachando && this.player.wasAgachado) {
+          this.player.y -= 2;
+
+          this.player.wasAgachado = false;
+          this.player.body.setSize(16, 22);
+          this.player.body.setOffset(0, 0);
+        }
+
+        if (this.player.isIndoEsquerda && !this.player.isAgachando) {
+          this.player.setAccelerationX(-3000)
+          this.player.isOlhandoFrente = false;
+        } else if (this.player.isIndoDireita && !this.player.isAgachando) {
+          this.player.setAccelerationX(3000)
+          this.player.isOlhandoFrente = true;
+        } else{
+          this.player.setAccelerationX(0)
+        }
+
+        if (this.player.isPulando) {
+          this.player.setVelocityY(-1600);
+        }
+
+        if (this.player.isAgachando) {
+          if (this.player.isIndoDireita) {
+            this.player.isOlhandoFrente = true;
+          } else if (this.player.isIndoEsquerda) {
+            this.player.isOlhandoFrente = false;
           }
-        } else if (this.cursors.down.isDown) {
-          if (this.player.anims.currentAnim?.key !== "MarioAgachado") {
-            this.player.setTexture("MarioAgachado");
+          const direcao = this.player.isOlhandoFrente
+            ? "olhandoFrente"
+            : "olhandoCosta";
+          if (this.player.anims.currentAnim?.key !== direcao) {
+            this.player.anims.play(direcao);
           }
-        } else if (this.cursors.right.isDown) {
-          this.player.x += 10;
-          this.player.flipX = false;
-          //esses Ifs sao para as animações não ficarem repetindo infinitamente
-          if (this.player.anims.currentAnim?.key !== "andando") {
-            this.player.anims.play("andando");
+          return;
+        }
+
+        if (this.player.isSubindo) {
+          const direcao = this.player.isOlhandoFrente
+            ? "pulandoFrente"
+            : "pulandoCosta";
+          if (this.player.anims.currentAnim?.key !== direcao) {
+            this.player.anims.play(direcao);
           }
-        } else if (this.cursors.left.isDown) {
-          this.player.x -= 10;
-          this.player.flipX = true;
-          if (this.player.anims.currentAnim?.key !== "andando") {
-            this.player.anims.play("andando");
+          return;
+        }
+
+        if (this.player.isDescendo) {
+          const direcao = this.player.isOlhandoFrente
+            ? "caindoFrente"
+            : "caindoCosta";
+          if (this.player.anims.currentAnim?.key !== direcao) {
+            this.player.anims.play(direcao);
+          }
+          return;
+        }
+
+        if (this.player.body.velocity.x !== 0) {
+          const anim = this.player.isOlhandoFrente
+            ? "andandoFrente"
+            : "andandoCosta";
+          if (this.player.anims.currentAnim?.key !== anim) {
+            this.player.anims.play(anim);
           }
         } else {
-          if (this.player.anims.currentAnim?.key !== "parado") {
-            this.player.anims.play("parado");
+          const anim = this.player.isOlhandoFrente
+            ? "paradoFrente"
+            : "paradoCosta";
+          if (this.player.anims.currentAnim?.key !== anim) {
+            this.player.anims.play(anim);
           }
-        }
-        //Movimentação eixo Y
-        if (this.player.body.velocity.y < 0) {
-          if (this.player.anims.currentAnim?.key !== "pulando") {
-            this.player.anims.play("pulando");
-          }
-        }
-        if (this.player.body.velocity.y > 0) {
-          if (this.player.anims.currentAnim?.key !== "caindo") {
-            this.player.anims.play("caindo");
-          }
-        }
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-          this.player.setVelocityY(-1500);
         }
       }
     }
@@ -220,7 +313,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: false,
+            // debug: true,
           },
         },
         scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
