@@ -33,8 +33,8 @@ export const Game = () => {
       geraFundo() {
         for (let i = 0; i < 5; i++) {
           this.add
-            .image(i * 715, 0, "Background")
-            .setScale(1.4)
+            .image(i * 1022, -200, "Background")
+            .setScale(2)
             .setOrigin(0, 0)
             .setFlipX(true)
             .setScrollFactor(0.1);
