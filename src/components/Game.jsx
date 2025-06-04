@@ -70,7 +70,8 @@ export const Game = () => {
         goomba.refreshBody();
       }
 
-      create() {
+      create() 
+      {
         this.cursors = this.input.keyboard.createCursorKeys()
         this.input.keyboard.on("keydown-ESC", () => {
         this.scene.launch("PauseScene")
@@ -124,7 +125,7 @@ export const Game = () => {
           frameRate: 12,
           repeat: -1,
         });
-
+        
         this.anims.create({
           key: "paradoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
@@ -306,14 +307,18 @@ export const Game = () => {
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+          width: 800,
+          height: 600,
+        },
         backgroundColor: "#4488aa",
         physics: {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            // debug: true,
+            debug: true,
           },
         },
         scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
@@ -329,5 +334,16 @@ export const Game = () => {
     };
   }, []);
 
-  return <div ref={gameRef} className="flex justify-center items-center" />;
+  return (
+    <div
+      ref={gameRef}
+      style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        backgroundColor: "#000",
+      }}
+    />
+  );
 };

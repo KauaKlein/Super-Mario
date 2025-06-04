@@ -14,11 +14,8 @@ export default class ConfigScene extends Phaser.Scene {
     this.load.audio("musica4", "/egg.mp3");
   }
 
-  create() {
-    this.add.text(0, 0, ".", {
-      fontFamily: "sans-serif",
-      fontSize: "1px"
-    }).setAlpha(0)
+  create(data) {
+    const cenaDeOrigem = data.voltarPara || "MenuScene";
     this.add.image(395, 295, "bgConfig").setScale(0.66);
 
     this.opcoes = ["Volume", "Música", "Salvar"];
@@ -81,16 +78,27 @@ export default class ConfigScene extends Phaser.Scene {
         localStorage.setItem("config_volume", this.volume);
         localStorage.setItem("config_musica", this.musicaAtual);
         this.music.stop();
-        this.scene.start("MenuScene");
+        this.scene.stop();
+        this.scene.resume("PauseScene");
       }
     });
 
-    this.input.keyboard.on("keydown-ESC", () => {
+    this.input.keyboard.on("keydown-F", () => {
       this.music.stop();
-      this.scene.start("MenuScene");
+      this.scene.stop();
+      this.scene.launch(cenaDeOrigem);
+    });
+    
+    this.input.keyboard.on("keydown-ENTER", () => {
+      if (this.opcaoSelecionada === 2) {
+        localStorage.setItem("config_volume", this.volume);
+        localStorage.setItem("config_musica", this.musicaAtual);
+        this.music.stop();
+        this.scene.stop();
+        this.scene.launch(cenaDeOrigem);
+      }
     });
   }
-
   mudaOpcao(delta) {
     this.opcaoSelecionada = Phaser.Math.Wrap(
       this.opcaoSelecionada + delta,

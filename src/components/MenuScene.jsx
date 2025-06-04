@@ -16,11 +16,15 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    
     this.add.text(0, 0, ".", {
       fontFamily: "sans-serif",
       fontSize: "1px"
     }).setAlpha(0)
-    this.add.image(395, 295, "bgMenu").setScale(0.66)
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+
+    this.add.image(centerX, centerY, "bgMenu").setScale(0.66).setOrigin(0.5, 0.5);
 
     const volumeSalvo = localStorage.getItem("config_volume")
     const musicaSalva = localStorage.getItem("config_musica")
