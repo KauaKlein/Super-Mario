@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
+import { GameOver } from "./GameOver";
+import Movimentacao from "./Movimentacao";
 import PreloadScene from "./PreloadScene"
 import PauseScene from "./PauseScene"
 
@@ -11,7 +13,6 @@ import PauseScene from "./PauseScene"
 export const Game = () => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
-  const GameOver = false
 
   useEffect(() => {
     class MainScene extends Phaser.Scene {
@@ -20,9 +21,12 @@ export const Game = () => {
       }
 
       preload() {
+        this.load.image("game", "/game.png");
+        this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("goomba", "/Goomba.png");
+
         this.load.image("Background", "/Background.png");
         this.load.spritesheet("MarioAgachado", "/MarioAgachado.png", {
           frameWidth: 16,
@@ -32,6 +36,7 @@ export const Game = () => {
           frameWidth: 16,
           frameHeight: 24,
         });
+
         this.load.spritesheet(
           "MiniMarioSpriteSheet",
           "/MiniMarioSpritesheet.png",
@@ -53,7 +58,6 @@ export const Game = () => {
       }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
-
         for (let i = 0; i < 5; i++) {
           const chao = this.chaoGroup.create(i * 900, 500, "chao");
           chao.setOrigin(0, 0);
@@ -63,11 +67,27 @@ export const Game = () => {
       }
 
       criagoomba() {
-        this.goombaGroup = this.physics.add.staticGroup();
-        const goomba = this.goombaGroup.create(500, 460, "goomba");
-        goomba.setOrigin(0, 0);
-        goomba.setScale(0.2);
-        goomba.refreshBody();
+        this.goombaGroup = this.physics.add.group();
+        for (let i = 1; i <= 5; i++) {
+          const goomba = this.goombaGroup.create(i * 300, 430, "goomba");
+          goomba.setScale(0.2);
+          goomba.setOrigin(0.5, 1);
+          goomba.setVelocityX(-150);
+          goomba.setCollideWorldBounds(true);
+          goomba.setBounce(0);
+          goomba.setImmovable(false);
+
+          const originalWidth = goomba.width;
+          const originalHeight = goomba.height;
+          const escala = 1;
+
+          goomba.body.setSize(
+            originalWidth * escala,
+            originalHeight * escala,
+            true
+          );
+          goomba.refreshBody();
+        }
       }
 
       create() 
@@ -78,6 +98,8 @@ export const Game = () => {
         this.scene.pause()
       })
         this.colidiuComgoomba = false;
+        this.isGameOver = false;
+
         this.geraFundo();
         this.player = this.physics.add.sprite(
           0,
@@ -89,6 +111,13 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 1);
         this.player.setScale(3);
+
+        // SENSOR DE PISÃO
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
+        this.physics.add.existing(this.pisaoSensor);
+        this.pisaoSensor.body.allowGravity = false;
+        this.pisaoSensor.body.setImmovable(true);
+
         this.player.setMaxVelocity(500,1600);
         this.player.setDragX(2000)
         this.player.isAgachado = false;
@@ -97,12 +126,23 @@ export const Game = () => {
         this.geraChao();
         this.criagoomba();
 
+        this.physics.add.collider(this.goombaGroup, this.goombaGroup);
+
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.physics.add.collider(this.player, this.chaoGroup);
+        this.physics.add.collider(this.goombaGroup, this.chaoGroup);
 
-        // colisão com goomba
+        this.goombaCollider = this.physics.add.collider(
+          this.player,
+          this.goombaGroup,
+          this.onPlayerHitObstacle,
+          null,
+          this
+        );
+
+        // COLLIDER normal
         this.physics.add.collider(
           this.player,
           this.goombaGroup,
@@ -111,11 +151,36 @@ export const Game = () => {
           this
         );
 
-        // câmera seguindo o Mario
+        // OVERLAP extra contra tunneling
+        this.physics.add.overlap(
+          this.player,
+          this.goombaGroup,
+          (player, goomba) => {
+            if (!this.isGameOver && this.detectaColisaoReal(player, goomba)) {
+              this.onPlayerHitObstacle();
+            }
+          },
+          null,
+          this
+        );
+
+        // OVERLAP de pisão
+        this.physics.add.overlap(
+          this.pisaoSensor,
+          this.goombaGroup,
+          (sensor, goomba) => {
+            if (!this.isGameOver) {
+              goomba.disableBody(true, true);
+              this.player.setVelocityY(-1000);
+            }
+          },
+          null,
+          this
+        );
+
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 2000, 600);
 
-        // animações
         this.anims.create({
           key: "andandoFrente",
           frames: [
@@ -142,6 +207,7 @@ export const Game = () => {
           frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
           frameRate: 1,
         });
+
         this.anims.create({
           key: "andandoCosta",
           frames: [
@@ -175,135 +241,79 @@ export const Game = () => {
           frames: [{ key: "MarioAgachado", frame: 1 }],
           frameRate: 1,
         });
+
         this.anims.create({
-          key: "game over",
-          //A ser implementado função game over
-          frames: [
-            { key: "MarioGameOver", frame: 0 },
-            { key: "MarioGameOver", frame: 1 },
-          ],
-          frameRate: 8,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: "game over",
-          //A ser implementado função game over
-          frames: [
-            { key: "MarioGameOver", frame: 0 },
-            { key: "MarioGameOver", frame: 1 },
-          ],
-          frameRate: 8,
-          repeat: -1,
-        });
+            key: "game over",
+            frames: [
+              { key: "MarioGameOver", frame: 0 },
+              { key: "MarioGameOver", frame: 1 },
+            ],
+            frameRate: 12,
+            repeat: -1,
+          });
       }
 
-      onPlayerHitObstacle(player, goomba) {
-        if (this.colidiuComgoomba) return;
-
-        this.colidiuComgoomba = true;
-        console.log("Colisão detectada!");
-        player.setTint(0xff0000);
-        this.gameOver();
+      detectaColisaoReal(player, goomba) {
+        // Ignora colisão se pisão já estiver ativo
+        return (
+          !this.physics.overlap(this.pisaoSensor, goomba) &&
+          ((player.body.touching.left && goomba.body.touching.right) ||
+            (player.body.touching.right && goomba.body.touching.left) ||
+            (player.body.touching.down && goomba.body.touching.up) ||
+            player.body.embedded)
+        );
       }
 
-      gameOver() {
-        this.cameras.main.fadeOut(1000);
+      onPlayerHitObstacle() {
+        if (this.isGameOver) return; // já morreu, não repete
+
+        this.isGameOver = true;
+
+        this.goombaGroup.children.iterate((goomba) => {
+          if (goomba.body) {
+            goomba.setVelocity(0, 0);
+            goomba.body.moves = false;
+          }
+        
+
+        GameOver(this);
+        this.physics.world.removeCollider(this.goombaCollider);
       }
-
-      // collectCoin(player, coin) {
-      //   coin.disableBody(true, true);
-      //   console.log("Moeda coletada!");
-      // }
-
+    )
+  }
       update() {
-        //Klein, NÃO mexe nisso, eu não vou saber fazer de novo, prioriza o meu  ao do Ale
-        this.player.isIndoEsquerda = this.cursors.left.isDown;
-        this.player.isIndoDireita = this.cursors.right.isDown;
-        this.player.isPulando =
-          this.cursors.up.isDown && this.player.body.touching.down;
-        this.player.isAgachando = this.cursors.down.isDown;
-        this.player.isSubindo = this.player.body.velocity.y < 0;
-        this.player.isDescendo = this.player.body.velocity.y > 0;
-
-        if (this.player.isAgachando) {
-          this.player.wasAgachado = true;
-          this.player.body.setOffset(0, 5);
-          this.player.body.setSize(16, 12);
-        } else if (!this.player.isAgachando && this.player.wasAgachado) {
-          this.player.y -= 2;
-
-          this.player.wasAgachado = false;
-          this.player.body.setSize(16, 22);
-          this.player.body.setOffset(0, 0);
+        if (!this.isGameOver) {
+          Movimentacao(this);
         }
 
-        if (this.player.isIndoEsquerda && !this.player.isAgachando) {
-          this.player.setAccelerationX(-3000)
-          this.player.isOlhandoFrente = false;
-        } else if (this.player.isIndoDireita && !this.player.isAgachando) {
-          this.player.setAccelerationX(3000)
-          this.player.isOlhandoFrente = true;
-        } else{
-          this.player.setAccelerationX(0)
-        }
+        this.goombaGroup.children.iterate((goomba) => {
+          if (!goomba.body) return;
 
-        if (this.player.isPulando) {
-          this.player.setVelocityY(-1600);
-        }
+          if (!this.isGameOver) {
+            const touchingLeft =
+              goomba.body.blocked.left || goomba.body.touching.left;
+            const touchingRight =
+              goomba.body.blocked.right || goomba.body.touching.right;
 
-        if (this.player.isAgachando) {
-          if (this.player.isIndoDireita) {
-            this.player.isOlhandoFrente = true;
-          } else if (this.player.isIndoEsquerda) {
-            this.player.isOlhandoFrente = false;
+            if (touchingLeft) {
+              goomba.setVelocityX(100);
+              goomba.flipX = false;
+            } else if (touchingRight) {
+              goomba.setVelocityX(-100);
+              goomba.flipX = true;
+            }
           }
-          const direcao = this.player.isOlhandoFrente
-            ? "olhandoFrente"
-            : "olhandoCosta";
-          if (this.player.anims.currentAnim?.key !== direcao) {
-            this.player.anims.play(direcao);
-          }
-          return;
+        });
+
+        // Atualiza posição do sensor de pisão
+        if (this.pisaoSensor && this.player) {
+          this.pisaoSensor.x = this.player.body.x + this.player.body.width / 2;
+          this.pisaoSensor.y = this.player.body.y + this.player.body.height + 25;
         }
 
-        if (this.player.isSubindo) {
-          const direcao = this.player.isOlhandoFrente
-            ? "pulandoFrente"
-            : "pulandoCosta";
-          if (this.player.anims.currentAnim?.key !== direcao) {
-            this.player.anims.play(direcao);
-          }
-          return;
-        }
-
-        if (this.player.isDescendo) {
-          const direcao = this.player.isOlhandoFrente
-            ? "caindoFrente"
-            : "caindoCosta";
-          if (this.player.anims.currentAnim?.key !== direcao) {
-            this.player.anims.play(direcao);
-          }
-          return;
-        }
-
-        if (this.player.body.velocity.x !== 0) {
-          const anim = this.player.isOlhandoFrente
-            ? "andandoFrente"
-            : "andandoCosta";
-          if (this.player.anims.currentAnim?.key !== anim) {
-            this.player.anims.play(anim);
-          }
-        } else {
-          const anim = this.player.isOlhandoFrente
-            ? "paradoFrente"
-            : "paradoCosta";
-          if (this.player.anims.currentAnim?.key !== anim) {
-            this.player.anims.play(anim);
-          }
-        }
       }
     }
-    
+
     if (!phaserGameRef.current) {
       phaserGameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
