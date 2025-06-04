@@ -1,4 +1,4 @@
-export default function Movementacao(scene) {
+export default function Movimentacao(scene) {
   const { cursors, player } = scene
 
   // Eixo X: movimentação horizontal e animação
