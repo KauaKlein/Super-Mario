@@ -22,10 +22,12 @@ export const Game = () => {
         this.load.image("MarioAgachado", "/MarioAgachado.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("goomba", "/Goomba.png");
+
         this.load.spritesheet("MarioGameOver", "/MarioGameOver.png", {
           frameWidth: 16,
           frameHeight: 24,
         });
+
         this.load.spritesheet(
           "MiniMarioSpriteSheet",
           "/MarioMiniSpritesheet.png",
@@ -47,11 +49,27 @@ export const Game = () => {
       }
 
       criagoomba() {
-        this.goombaGroup = this.physics.add.staticGroup();
-        const goomba = this.goombaGroup.create(500, 460, "goomba");
-        goomba.setOrigin(0, 0);
-        goomba.setScale(0.2);
-        goomba.refreshBody();
+        this.goombaGroup = this.physics.add.group();
+        for (let i = 1; i <= 5; i++) {
+          const goomba = this.goombaGroup.create(i * 300, 430, "goomba");
+          goomba.setScale(0.2);
+          goomba.setOrigin(0.5, 1);
+          goomba.setVelocityX(-150);
+          goomba.setCollideWorldBounds(true);
+          goomba.setBounce(0);
+          goomba.setImmovable(false);
+
+          const originalWidth = goomba.width;
+          const originalHeight = goomba.height;
+          const escala = 1;
+
+          goomba.body.setSize(
+            originalWidth * escala,
+            originalHeight * escala,
+            true
+          );
+          goomba.refreshBody();
+        }
       }
 
       create() {
@@ -69,14 +87,25 @@ export const Game = () => {
         this.player.setOrigin(0, 0);
         this.player.setScale(3);
 
+        // SENSOR DE PISÃO
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 1, 60);
+        this.physics.add.existing(this.pisaoSensor);
+        this.pisaoSensor.body.allowGravity = false;
+        this.pisaoSensor.body.setImmovable(true);
+
         this.geraChao();
         this.criagoomba();
 
+        this.physics.add.collider(this.goombaGroup, this.goombaGroup);
+
         this.physics.world.setBounds(0, 0, 2000, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.physics.add.collider(this.player, this.chaoGroup);
 
-        this.goombaCollider = this.physics.add.collider(
+        this.physics.add.collider(this.player, this.chaoGroup);
+        this.physics.add.collider(this.goombaGroup, this.chaoGroup);
+
+        // COLLIDER normal
+        this.physics.add.collider(
           this.player,
           this.goombaGroup,
           this.onPlayerHitObstacle,
@@ -84,9 +113,31 @@ export const Game = () => {
           this
         );
 
-        this.chaoCollider = this.physics.add.collider(
+        // OVERLAP extra contra tunneling
+        this.physics.add.overlap(
           this.player,
-          this.chaoGroup
+          this.goombaGroup,
+          (player, goomba) => {
+            if (!this.isGameOver && this.detectaColisaoReal(player, goomba)) {
+              this.onPlayerHitObstacle();
+            }
+          },
+          null,
+          this
+        );
+
+        // OVERLAP de pisão
+        this.physics.add.overlap(
+          this.pisaoSensor,
+          this.goombaGroup,
+          (sensor, goomba) => {
+            if (!this.isGameOver) {
+              goomba.disableBody(true, true);
+              this.player.setVelocityY(-1000);
+            }
+          },
+          null,
+          this
         );
 
         this.cameras.main.startFollow(this.player);
@@ -132,17 +183,73 @@ export const Game = () => {
         }
       }
 
-      onPlayerHitObstacle() {
-        if (this.colidiuComgoomba) return;
-        this.colidiuComgoomba = true;
-        console.log("Colisão detectada!");
-        GameOver(this);
+      detectaColisaoReal(player, goomba) {
+        // Ignora colisão se pisão já estiver ativo
+        return (
+          !this.physics.overlap(this.pisaoSensor, goomba) &&
+          ((player.body.touching.left && goomba.body.touching.right) ||
+            (player.body.touching.right && goomba.body.touching.left) ||
+            (player.body.touching.down && goomba.body.touching.up) ||
+            player.body.embedded)
+        );
       }
 
+      onPlayerHitObstacle() {
+        if (this.isGameOver) return; // já morreu, não repete
+
+        this.isGameOver = true;
+
+        this.goombaGroup.children.iterate((goomba) => {
+          if (goomba.body) {
+            goomba.setVelocity(0, 0);
+            goomba.body.moves = false;
+          }
+        });
+
+        GameOver(this);
+        this.physics.world.removeCollider(this.goombaCollider);
+      }
       update() {
         if (!this.isGameOver) {
           Movimentacao(this);
         }
+
+        this.goombaGroup.children.iterate((goomba) => {
+          if (!goomba.body) return;
+
+          if (!this.isGameOver) {
+            const touchingLeft =
+              goomba.body.blocked.left || goomba.body.touching.left;
+            const touchingRight =
+              goomba.body.blocked.right || goomba.body.touching.right;
+
+            if (touchingLeft) {
+              goomba.setVelocityX(100);
+              goomba.flipX = false;
+            } else if (touchingRight) {
+              goomba.setVelocityX(-100);
+              goomba.flipX = true;
+            }
+          }
+        });
+
+        // Atualiza posição do sensor de pisão
+        if (this.pisaoSensor && this.player) {
+          this.pisaoSensor.x = this.player.x + this.player.displayWidth / 2;
+          this.pisaoSensor.y = this.player.y + this.player.displayHeight;
+        }
+
+        this.goombaGroup.children.iterate((goomba) => {
+          if (!goomba.body) return;
+
+          if (goomba.body.blocked.left) {
+            goomba.setVelocityX(100);
+            goomba.flipX = false;
+          } else if (goomba.body.blocked.right) {
+            goomba.setVelocityX(-100);
+            goomba.flipX = true;
+          }
+        });
       }
     }
 
@@ -156,7 +263,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: false,
+            debug: true,
           },
         },
         scene: [MenuScene, MainScene, ConfigScene],
