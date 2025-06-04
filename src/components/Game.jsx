@@ -4,6 +4,11 @@ import MenuScene from "./MenuScene";
 import ConfigScene from "./ConfigScene";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
+import PreloadScene from "./PreloadScene"
+import PauseScene from "./PauseScene"
+
+
+
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -19,10 +24,14 @@ export const Game = () => {
         this.load.image("game", "/game.png");
         this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
-        this.load.image("MarioAgachado", "/MarioAgachado.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("goomba", "/Goomba.png");
 
+        this.load.image("Background", "/Background.png");
+        this.load.spritesheet("MarioAgachado", "/MarioAgachado.png", {
+          frameWidth: 16,
+          frameHeight: 16,
+        });
         this.load.spritesheet("MarioGameOver", "/MarioGameOver.png", {
           frameWidth: 16,
           frameHeight: 24,
@@ -30,14 +39,23 @@ export const Game = () => {
 
         this.load.spritesheet(
           "MiniMarioSpriteSheet",
-          "/MarioMiniSpritesheet.png",
+          "/MiniMarioSpritesheet.png",
           {
             frameWidth: 16,
             frameHeight: 22,
           }
         );
       }
-
+      geraFundo() {
+        for (let i = 0; i < 5; i++) {
+          this.add
+            .image(i * 1022, -200, "Background")
+            .setScale(2)
+            .setOrigin(0, 0)
+            .setFlipX(true)
+            .setScrollFactor(0.1);
+        }
+      }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
         for (let i = 0; i < 5; i++) {
@@ -73,9 +91,15 @@ export const Game = () => {
       }
 
       create() {
+        this.cursors = this.input.keyboard.createCursorKeys()
+        this.input.keyboard.on("keydown-ESC", () => {
+        this.scene.launch("PauseScene")
+        this.scene.pause()
+      })
         this.colidiuComgoomba = false;
         this.isGameOver = false;
 
+        this.geraFundo();
         this.player = this.physics.add.sprite(
           0,
           300,
@@ -84,15 +108,20 @@ export const Game = () => {
         );
         this.player.setCollideWorldBounds(true);
         this.player.setBounce(0);
-        this.player.setOrigin(0, 0);
+        this.player.setOrigin(0, 1);
         this.player.setScale(3);
 
         // SENSOR DE PISÃO
-        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 25);
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
         this.physics.add.existing(this.pisaoSensor);
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
 
+        this.player.setMaxVelocity(500,1600);
+        this.player.setDragX(2000)
+        this.player.isAgachado = false;
+        this.player.wasAgachado = false;
+        this.player.isOlhandoFrente = true;
         this.geraChao();
         this.criagoomba();
 
@@ -152,7 +181,7 @@ export const Game = () => {
         this.cameras.main.setBounds(0, 0, 2000, 600);
 
         this.anims.create({
-          key: "andando",
+          key: "andandoFrente",
           frames: [
             { key: "MiniMarioSpriteSheet", frame: 3 },
             { key: "MiniMarioSpriteSheet", frame: 2 },
@@ -162,24 +191,57 @@ export const Game = () => {
         });
 
         this.anims.create({
-          key: "parado",
+          key: "paradoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
         });
 
         this.anims.create({
-          key: "pulando",
+          key: "pulandoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 1 }],
           frameRate: 1,
         });
 
         this.anims.create({
-          key: "caindo",
+          key: "caindoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 0 }],
           frameRate: 1,
         });
 
-        if (!this.anims.exists("game over")) {
-          this.anims.create({
+        this.anims.create({
+          key: "andandoCosta",
+          frames: [
+            { key: "MiniMarioSpriteSheet", frame: 4 },
+            { key: "MiniMarioSpriteSheet", frame: 5 },
+          ],
+          frameRate: 12,
+          repeat: -1,
+        });
+        this.anims.create({
+          key: "paradoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 5 }],
+        });
+        this.anims.create({
+          key: "pulandoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 6 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "caindoCosta",
+          frames: [{ key: "MiniMarioSpriteSheet", frame: 7 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "olhandoFrente",
+          frames: [{ key: "MarioAgachado", frame: 0 }],
+          frameRate: 1,
+        });
+        this.anims.create({
+          key: "olhandoCosta",
+          frames: [{ key: "MarioAgachado", frame: 1 }],
+          frameRate: 1,
+        });
+
+        this.anims.create({
             key: "game over",
             frames: [
               { key: "MarioGameOver", frame: 0 },
@@ -188,7 +250,6 @@ export const Game = () => {
             frameRate: 12,
             repeat: -1,
           });
-        }
       }
 
       detectaColisaoReal(player, goomba) {
@@ -212,11 +273,13 @@ export const Game = () => {
             goomba.setVelocity(0, 0);
             goomba.body.moves = false;
           }
-        });
+        
 
         GameOver(this);
         this.physics.world.removeCollider(this.goombaCollider);
       }
+    )
+  }
       update() {
         if (!this.isGameOver) {
           Movimentacao(this);
@@ -244,7 +307,7 @@ export const Game = () => {
         // Atualiza posição do sensor de pisão
         if (this.pisaoSensor && this.player) {
           this.pisaoSensor.x = this.player.body.x + this.player.body.width / 2;
-          this.pisaoSensor.y = this.player.body.y + this.player.body.height + 15;
+          this.pisaoSensor.y = this.player.body.y + this.player.body.height + 25;
         }
 
       }
@@ -263,7 +326,7 @@ export const Game = () => {
             debug: true,
           },
         },
-        scene: [MenuScene, MainScene, ConfigScene],
+        scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
         parent: gameRef.current,
       });
     }

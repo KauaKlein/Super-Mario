@@ -1,49 +1,89 @@
 export default function Movimentacao(scene) {
   const { cursors, player } = scene
 
-  // Eixo X: movimentação horizontal e animação
-  if (cursors.left.isDown && cursors.right.isDown) {
-    player.x += 0
-    if (player.anims.currentAnim?.key !== "parado") {
-      player.anims.play("parado")
-    }
-  } else if (cursors.down.isDown) {
-    if (player.texture.key !== "MarioAgachado") {
-      player.setTexture("MarioAgachado")
-    }
-  } else if (cursors.right.isDown) {
-    player.x += 5
-    player.flipX = false
-    if (player.anims.currentAnim?.key !== "andando") {
-      player.anims.play("andando")
-    }
-  } else if (cursors.left.isDown) {
-    player.x -= 5
-    player.flipX = true
-    if (player.anims.currentAnim?.key !== "andando") {
-      player.anims.play("andando")
-    }
-  } else {
-    if (player.anims.currentAnim?.key !== "parado") {
-      player.anims.play("parado")
-    }
-  }
+ //Klein, NÃO mexe nisso, eu não vou saber fazer de novo, prioriza o meu  ao do Ale
+ player.isIndoEsquerda = cursors.left.isDown;
+ player.isIndoDireita = cursors.right.isDown;
+ player.isPulando =
+   cursors.up.isDown && player.body.touching.down;
+ player.isAgachando = cursors.down.isDown;
+ player.isSubindo = player.body.velocity.y < 0;
+ player.isDescendo = player.body.velocity.y > 0;
 
-  // Eixo Y: animações de pulo e queda
-  if (player.body.velocity.y < 0) {
-    if (player.anims.currentAnim?.key !== "pulando") {
-      player.anims.play("pulando")
-    }
-  }
+ if (player.isAgachando) {
+   player.wasAgachado = true;
+   player.body.setOffset(0, 5);
+   player.body.setSize(16, 12);
+ } else if (!player.isAgachando && player.wasAgachado) {
+   player.y -= 2;
 
-  if (player.body.velocity.y > 0) {
-    if (player.anims.currentAnim?.key !== "caindo") {
-      player.anims.play("caindo")
-    }
-  }
+   player.wasAgachado = false;
+   player.body.setSize(16, 22);
+   player.body.setOffset(0, 0);
+ }
 
-  // Pulo
-  if (cursors.up.isDown && player.body.touching.down) {
-    player.setVelocityY(-1500)
-  }
+ if (player.isIndoEsquerda && !player.isAgachando) {
+   player.setAccelerationX(-3000)
+   player.isOlhandoFrente = false;
+ } else if (player.isIndoDireita && !player.isAgachando) {
+   player.setAccelerationX(3000)
+   player.isOlhandoFrente = true;
+ } else{
+   player.setAccelerationX(0)
+ }
+
+ if (player.isPulando) {
+   player.setVelocityY(-1600);
+ }
+
+ if (player.isAgachando) {
+   if (player.isIndoDireita) {
+     player.isOlhandoFrente = true;
+   } else if (player.isIndoEsquerda) {
+     player.isOlhandoFrente = false;
+   }
+   const direcao = player.isOlhandoFrente
+     ? "olhandoFrente"
+     : "olhandoCosta";
+   if (player.anims.currentAnim?.key !== direcao) {
+     player.anims.play(direcao);
+   }
+   return;
+ }
+
+ if (player.isSubindo) {
+   const direcao = player.isOlhandoFrente
+     ? "pulandoFrente"
+     : "pulandoCosta";
+   if (player.anims.currentAnim?.key !== direcao) {
+     player.anims.play(direcao);
+   }
+   return;
+ }
+
+ if (player.isDescendo) {
+   const direcao = player.isOlhandoFrente
+     ? "caindoFrente"
+     : "caindoCosta";
+   if (player.anims.currentAnim?.key !== direcao) {
+     player.anims.play(direcao);
+   }
+   return;
+ }
+
+ if (player.body.velocity.x !== 0) {
+   const anim = player.isOlhandoFrente
+     ? "andandoFrente"
+     : "andandoCosta";
+   if (player.anims.currentAnim?.key !== anim) {
+     player.anims.play(anim);
+   }
+ } else {
+   const anim = player.isOlhandoFrente
+     ? "paradoFrente"
+     : "paradoCosta";
+   if (player.anims.currentAnim?.key !== anim) {
+     player.anims.play(anim);
+   }
+ }
 }

@@ -1,4 +1,5 @@
 export function GameOver(scene) {
+  scene.player.setAccelerationX(0)
   scene.player.anims.play("game over", true);
   scene.isGameOver = true;
 
