@@ -1,27 +1,28 @@
 export function GameOver(scene) {
-  scene.player.setAccelerationX(0)
+  // Protege contra múltiplos game overs
+  if (scene._gameOverActive) return;
+  scene._gameOverActive = true;
+
+  scene.player.setAccelerationX(0);
   scene.player.anims.play("game over", true);
   scene.isGameOver = true;
 
   scene.physics.world.removeCollider(scene.goombaCollider);
   scene.physics.world.removeCollider(scene.chaoCollider);
   scene.player.setDepth(100);
-  // força o chão a parar de colidir com o player
+
   scene.chaoGroup.children.iterate((tile) => {
     tile.disableBody(false, false);
   });
 
   scene.player.setCollideWorldBounds(false);
-
   scene.player.setVelocity(0, -1000);
   scene.player.body.allowGravity = false;
 
   scene.time.delayedCall(280, () => {
     scene.player.body.allowGravity = true;
   });
-  scene.player.anims.play("game over", true);
 
-  // Cria fundo preto invisível
   const blackout = scene.add.graphics();
   blackout.fillStyle(0x000000, 1);
   blackout.fillRect(0, 0, scene.cameras.main.width, scene.cameras.main.height);
@@ -29,7 +30,6 @@ export function GameOver(scene) {
   blackout.setDepth(99);
   blackout.setAlpha(0);
 
-  // ⏱️ Aguarda 600ms antes de iniciar o fade
   scene.time.delayedCall(600, () => {
     scene.tweens.add({
       targets: blackout,
@@ -64,6 +64,15 @@ export function GameOver(scene) {
           duration: 1000,
           ease: "Power2",
           onComplete: () => {
+            // Remove elementos antigos, se existirem
+            if (scene.selector) scene.selector.destroy();
+            if (scene.restartText) scene.restartText.destroy();
+            if (scene.menuText) scene.menuText.destroy();
+            if (scene.keyListener)
+              scene.input.keyboard.removeListener("keydown", scene.keyListener);
+
+            scene.menuOptions = [];
+
             scene.restartText = scene.add
               .text(centerX, centerY + 100, "Reiniciar", {
                 fontFamily: "Super Mario",
@@ -110,7 +119,8 @@ export function GameOver(scene) {
 
             updateSelectorPosition();
 
-            scene.input.keyboard.on("keydown", (event) => {
+            // Registra o evento de teclado e guarda o handler para remover depois
+            scene.keyListener = (event) => {
               if (event.code === "ArrowUp" || event.code === "ArrowLeft") {
                 scene.selectedOptionIndex =
                   (scene.selectedOptionIndex - 1 + scene.menuOptions.length) %
@@ -121,16 +131,26 @@ export function GameOver(scene) {
                 event.code === "ArrowRight"
               ) {
                 scene.selectedOptionIndex =
-                  (scene.selectedOptionIndex + 1) % scene.menuOptions.length;
+                  (scene.selectedOptionIndex + 1) %
+                  scene.menuOptions.length;
                 updateSelectorPosition();
               } else if (event.code === "Enter") {
+                // Reseta controles e reinicia a cena ou vai pro menu
+                scene._gameOverActive = false;
+                scene.input.keyboard.removeListener(
+                  "keydown",
+                  scene.keyListener
+                );
+
                 if (scene.selectedOptionIndex === 0) {
                   scene.scene.restart();
                 } else if (scene.selectedOptionIndex === 1) {
                   scene.scene.start("MenuScene");
                 }
               }
-            });
+            };
+
+            scene.input.keyboard.on("keydown", scene.keyListener);
           },
         });
       },

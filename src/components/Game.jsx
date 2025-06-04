@@ -185,8 +185,15 @@ export const Game = () => {
           this.goombaGroup,
           (sensor, goomba) => {
             if (!this.isGameOver) {
+              goomba.anims.play("goombaMorrendo", 2);
+              goomba.setVelocity(0, 0);
+              goomba.body.enable = false;
+
+              this.time.delayedCall(300, () => {
               goomba.disableBody(true, true);
-              this.player.setVelocityY(-1000);
+      });
+
+  this.player.setVelocityY(-1000);
             }
           },
           null,
@@ -265,6 +272,11 @@ export const Game = () => {
           frameRate: 12,
           repeat: -1,
         });
+        this.anims.create({
+          key: "goombaMorrendo",
+          frames: [{ key: "SpriteSheetGoomba", frame: 2 }],
+          frameRate: 1,
+        });
       }
 
       detectaColisaoReal(player, goomba) {
@@ -293,6 +305,8 @@ export const Game = () => {
           this.physics.world.removeCollider(this.goombaCollider);
         });
       }
+
+
       update() {
         if (!this.isGameOver) {
           Movimentacao(this);
@@ -307,13 +321,13 @@ export const Game = () => {
             const touchingRight =
               goomba.body.blocked.right || goomba.body.touching.right;
 
-            if (touchingLeft) {
-              goomba.setVelocityX(100);
-              goomba.flipX = false;
-            } else if (touchingRight) {
-              goomba.setVelocityX(-100);
-              goomba.flipX = true;
-            }
+              if (touchingLeft) {
+                goomba.setVelocityX(100);
+                goomba.setFlipX(true); // olhando pra esquerda (se sua sprite sheet for assim)
+              } else if (touchingRight) {
+                goomba.setVelocityX(-100);
+                goomba.setFlipX(false); // olhando pra direita
+              }
           }
         });
 
@@ -336,7 +350,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
+            debug: false,
           },
         },
         scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
