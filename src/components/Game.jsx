@@ -88,7 +88,7 @@ export const Game = () => {
         this.player.setScale(3);
 
         // SENSOR DE PISÃO
-        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 1, 60);
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 25);
         this.physics.add.existing(this.pisaoSensor);
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
@@ -103,6 +103,14 @@ export const Game = () => {
 
         this.physics.add.collider(this.player, this.chaoGroup);
         this.physics.add.collider(this.goombaGroup, this.chaoGroup);
+
+        this.goombaCollider = this.physics.add.collider(
+          this.player,
+          this.goombaGroup,
+          this.onPlayerHitObstacle,
+          null,
+          this
+        );
 
         // COLLIDER normal
         this.physics.add.collider(
@@ -235,21 +243,10 @@ export const Game = () => {
 
         // Atualiza posição do sensor de pisão
         if (this.pisaoSensor && this.player) {
-          this.pisaoSensor.x = this.player.x + this.player.displayWidth / 2;
-          this.pisaoSensor.y = this.player.y + this.player.displayHeight;
+          this.pisaoSensor.x = this.player.body.x + this.player.body.width / 2;
+          this.pisaoSensor.y = this.player.body.y + this.player.body.height + 15;
         }
 
-        this.goombaGroup.children.iterate((goomba) => {
-          if (!goomba.body) return;
-
-          if (goomba.body.blocked.left) {
-            goomba.setVelocityX(100);
-            goomba.flipX = false;
-          } else if (goomba.body.blocked.right) {
-            goomba.setVelocityX(-100);
-            goomba.flipX = true;
-          }
-        });
       }
     }
 
