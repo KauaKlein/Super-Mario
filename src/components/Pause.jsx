@@ -7,8 +7,10 @@ export default class Pause extends Phaser.Scene {
 
   create() {
     const mainScene = this.scene.get("MainScene");
-    if (mainScene.musicaDeFundo && mainScene.musicaDeFundo.isPlaying) {
-      mainScene.musicaDeFundo.pause();
+
+    // ✅ Pausa a música corretamente
+    if (mainScene.musica && mainScene.musica.isPlaying) {
+      mainScene.musica.pause();
     }
 
     const centerX = this.cameras.main.centerX;
@@ -53,7 +55,7 @@ export default class Pause extends Phaser.Scene {
               fill: true,
             },
           })
-          .setOrigin(0.5, 0.5) // <-- CENTRALIZADO HORIZONTALMENTE
+          .setOrigin(0.5)
     );
 
     // seta ➤
@@ -73,12 +75,9 @@ export default class Pause extends Phaser.Scene {
     this.input.keyboard.on("keydown-ENTER", () => {
       switch (this.opcaoSelecionada) {
         case 0: {
-          const cenaPrincipal = this.scene.get("MainScene");
-          if (
-            cenaPrincipal.musicaDeFundo &&
-            cenaPrincipal.musicaDeFundo.isPaused
-          ) {
-            cenaPrincipal.musicaDeFundo.resume();
+          // ✅ Retoma a música se estiver pausada
+          if (mainScene.musica && mainScene.musica.isPaused) {
+            mainScene.musica.resume();
           }
           this.scene.resume("MainScene");
           this.scene.stop();
@@ -111,8 +110,6 @@ export default class Pause extends Phaser.Scene {
     );
 
     this.textos[this.opcaoSelecionada].setColor("#ffff00");
-
-    const novoY = 230 + this.opcaoSelecionada * 50;
     this.seta.setY(230 + this.opcaoSelecionada * 50);
   }
 }

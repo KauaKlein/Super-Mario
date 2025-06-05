@@ -22,7 +22,7 @@ export const Game = () => {
         this.load.image("game", "/game.png");
         this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
-        this.load.audio("temaYoshi", "/yoshi.mp3");
+        this.load.audio("musica1", "/menu.mp3");
         this.load.image("Background", "/Background.png");
         this.load.image("GroundTorto", "/GroundTorto.png");
         this.load.image("Cano", "/Cano.png");
@@ -222,6 +222,12 @@ export const Game = () => {
           fontSize: "32px",
           fill: "#fff",
         });
+        this.pontuacao = 0;
+        this.musica = this.sound.add("musica1", {
+        loop: true,
+        volume: 0.3,
+        });
+        this.musica.play();
         this.textoMoeda.setScrollFactor(0);
 
         this.anims.create({
@@ -252,6 +258,17 @@ export const Game = () => {
         });
         this.colidiuComgoomba = false;
         this.isGameOver = false;
+        this.textoPontuacao = this.add
+          .text(20, 20, "SCORE: 000", {
+            fontFamily: "Super Mario",
+            fontSize: "28px",
+            color: "#ffffff",
+            stroke: "#000000",
+            strokeThickness: 8,
+          })
+          .setScrollFactor(0)
+          .setDepth(999);
+
         this.criaMoeda();
         this.geraFundo();
         this.player = this.physics.add.sprite(
@@ -533,10 +550,13 @@ export const Game = () => {
       coletarMoeda(player, moeda) {
         moeda.disableBody(true, true);
         this.moedasColetadas += 1;
-        console.log(this.moedasColetadas);
-        this.textoMoeda.setText("Moedas: " + this.moedasColetadas);
-      }
+        this.pontuacao += 10;
 
+        this.textoMoeda.setText("Moedas: " + this.moedasColetadas);
+
+        const textoFormatado = String(this.pontuacao).padStart(3, "0");
+        this.textoPontuacao.setText("SCORE: " + textoFormatado);
+      }
       matarBillPisado(sensor, bill) {
         if (this.isGameOver) return;
 
@@ -627,7 +647,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
+            debug: false,
           },
         },
         scene: [Preload, Menu, MainScene, Config, Pause],
