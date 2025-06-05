@@ -16,51 +16,56 @@ export default class Pause extends Phaser.Scene {
 
     this.add.rectangle(centerX, centerY, 800, 600, 0x000000, 0.5);
 
-  this.add.text(centerX, 150, "JOGO PAUSADO", {
-  fontFamily: "Super Mario",
-  fontSize: "36px",
-  color: "#ffffff",
-  stroke: "#000000",
-  strokeThickness: 8,
-  shadow: {
-    offsetX: 2,
-    offsetY: 2,
-    color: "#000000",
-    blur: 2,
-    fill: true
-  }
-}).setOrigin(0.5);
-
+    this.add
+      .text(centerX, 150, "JOGO PAUSADO", {
+        fontFamily: "Super Mario",
+        fontSize: "36px",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 8,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          color: "#000000",
+          blur: 2,
+          fill: true,
+        },
+      })
+      .setOrigin(0.5);
 
     const opcoes = ["Continuar", "Reiniciar", "Configuração", "Menu"];
     this.opcaoSelecionada = 0;
 
-   this.textos = opcoes.map((texto, i) =>
-    this.add.text(centerX, 230 + i * 50, texto, {
-      fontFamily: "Super Mario",
-      fontSize: "28px",
-      color: i === 0 ? "#ffff00" : "#ffffff",
-      stroke: "#000000",
-      strokeThickness: 8,
-      shadow: {
-        offsetX: 2,
-        offsetY: 2,
-        color: "#000000",
-        blur: 2,
-        fill: true
-      }
-    }).setOrigin(0.5, 0.5) // <-- CENTRALIZADO HORIZONTALMENTE
-);
-
+    this.textos = opcoes.map(
+      (texto, i) =>
+        this.add
+          .text(centerX, 230 + i * 50, texto, {
+            fontFamily: "Super Mario",
+            fontSize: "28px",
+            color: i === 0 ? "#ffff00" : "#ffffff",
+            stroke: "#000000",
+            strokeThickness: 8,
+            shadow: {
+              offsetX: 2,
+              offsetY: 2,
+              color: "#000000",
+              blur: 2,
+              fill: true,
+            },
+          })
+          .setOrigin(0.5, 0.5) // <-- CENTRALIZADO HORIZONTALMENTE
+    );
 
     // seta ➤
-   this.seta = this.add.text(centerX - 100, 230, "➤", {
-      fontFamily: "Super Mario",
-      fontSize: "28px",
-      color: "#ffff00",
-      stroke: "#000000",
-      strokeThickness: 8,
-    }).setOrigin(0.5);
+    this.seta = this.add
+      .text(centerX - 100, 230, "➤", {
+        fontFamily: "Super Mario",
+        fontSize: "28px",
+        color: "#ffff00",
+        stroke: "#000000",
+        strokeThickness: 8,
+      })
+      .setOrigin(0.5);
 
     this.input.keyboard.on("keydown-UP", () => this.mudarOpcao(-1));
     this.input.keyboard.on("keydown-DOWN", () => this.mudarOpcao(1));
@@ -109,6 +114,5 @@ export default class Pause extends Phaser.Scene {
 
     const novoY = 230 + this.opcaoSelecionada * 50;
     this.seta.setY(230 + this.opcaoSelecionada * 50);
-
   }
 }

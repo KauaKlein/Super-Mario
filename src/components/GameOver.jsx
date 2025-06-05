@@ -131,8 +131,7 @@ export function GameOver(scene) {
                 event.code === "ArrowRight"
               ) {
                 scene.selectedOptionIndex =
-                  (scene.selectedOptionIndex + 1) %
-                  scene.menuOptions.length;
+                  (scene.selectedOptionIndex + 1) % scene.menuOptions.length;
                 updateSelectorPosition();
               } else if (event.code === "Enter") {
                 // Reseta controles e reinicia a cena ou vai pro menu

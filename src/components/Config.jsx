@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 
-
 export default class Config extends Phaser.Scene {
   constructor() {
     super("Config");
@@ -34,7 +33,7 @@ export default class Config extends Phaser.Scene {
 
     this.music = this.sound.add(this.musicas[this.musicaAtual].key, {
       volume: this.volume / 10,
-      loop: true
+      loop: true,
     });
     this.music.play();
 
@@ -50,8 +49,8 @@ export default class Config extends Phaser.Scene {
           offsetY: 2,
           color: "#000000",
           blur: 2,
-          fill: true
-        }
+          fill: true,
+        },
       })
     );
 
@@ -60,7 +59,7 @@ export default class Config extends Phaser.Scene {
       fontSize: "28px",
       color: "#ffff00",
       stroke: "#000000",
-      strokeThickness: 8
+      strokeThickness: 8,
     });
 
     this.atualizaTexto();
@@ -70,7 +69,7 @@ export default class Config extends Phaser.Scene {
     this.input.keyboard.on("keydown-LEFT", () => this.ajustarValor(-1));
     this.input.keyboard.on("keydown-RIGHT", () => this.ajustarValor(1));
 
-   this.input.keyboard.on("keydown-ENTER", () => {
+    this.input.keyboard.on("keydown-ENTER", () => {
       if (this.opcaoSelecionada === 2) {
         // Salva e retorna ao menu
         localStorage.setItem("config_volume", `${this.volume}`);
@@ -86,7 +85,7 @@ export default class Config extends Phaser.Scene {
       this.scene.stop();
       this.scene.launch(cenaDeOrigem);
     });
-    
+
     this.input.keyboard.on("keydown-ENTER", () => {
       if (this.opcaoSelecionada === 2) {
         localStorage.setItem("config_volume", this.volume);
@@ -120,7 +119,7 @@ export default class Config extends Phaser.Scene {
       );
       this.music = this.sound.add(this.musicas[this.musicaAtual].key, {
         volume: this.volume / 10,
-        loop: true
+        loop: true,
       });
       this.music.play();
     }
