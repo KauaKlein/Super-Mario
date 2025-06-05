@@ -24,6 +24,11 @@ export const Game = () => {
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("Background", "/Background.png");
 
+        this.load.spritesheet("SpriteSheetBillBullet", "/BillBullet.png", {
+          frameWidth: 63,
+          frameHeight: 63,
+        });
+
         this.load.spritesheet("SpriteSheetGoomba", "/SpriteSheetGoomba.png", {
           frameWidth: 16,
           frameHeight: 16,
@@ -73,12 +78,46 @@ export const Game = () => {
         for (let i = 1; i < 6; i++) {
           const moeda = this.moedaGroup.create(i * 300, 430, "Moedas");
           moeda.anims.play("animacaoMoeda");
-          moeda.setImmovable(false);
-          moeda.setScale(3);
           moeda.body.allowGravity = false;
+          moeda.setScale(3);
           moeda.setDepth(1);
         }
       }
+      criaBill() {
+        this.bill = this.physics.add.group();
+        const billBala = this.bill.create(
+          1800,
+          360,
+          "SpriteSheetBillBullet",
+          0
+        );
+
+        // Visual e física
+        billBala.setScale(3);
+        billBala.setVelocityX(-250);
+        billBala.setDepth(1);
+        billBala.body.allowGravity = false;
+
+        // Hitbox circular (aproximada do corpo real)
+        const raio = 30;
+        billBala.body.setCircle(raio);
+        billBala.body.setOffset(0, 4);
+
+        const body2 = this.add.rectangle(
+          billBala.x + 10,
+          billBala.y,
+          50,
+          180,
+          0xff0000,
+          0
+        );
+        this.physics.add.existing(body2);
+        body2.body.setAllowGravity(false);
+        body2.body.setImmovable(true);
+        body2.setDepth(1);
+        billBala.body2 = body2;
+      }
+
       criagoomba() {
         this.goombaGroup = this.physics.add.group();
         for (let i = 1; i <= 5; i++) {
@@ -110,6 +149,13 @@ export const Game = () => {
       }
 
       create() {
+        this.moedasColetadas = 0;
+        this.textoMoeda = this.add.text(16, 16, "Moedas: 0", {
+          fontSize: "32px",
+          fill: "#fff",
+        });
+        this.textoMoeda.setScrollFactor(0);
+
         this.anims.create({
           key: "goombaMovendo",
           frames: [
@@ -150,19 +196,20 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 1);
         this.player.setScale(3);
-
+        
         // SENSOR DE PISÃO
         this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
         this.physics.add.existing(this.pisaoSensor);
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
-
+        
         this.player.setMaxVelocity(500, 1600);
         this.player.setDragX(2000);
         this.player.isAgachado = false;
         this.player.wasAgachado = false;
         this.player.isOlhandoFrente = true;
         this.geraChao();
+        this.criaBill();
         this.criagoomba();
 
         this.physics.add.collider(this.goombaGroup, this.goombaGroup);
@@ -214,15 +261,96 @@ export const Game = () => {
               goomba.body.enable = false;
 
               this.time.delayedCall(300, () => {
-              goomba.disableBody(true, true);
-      });
+                goomba.disableBody(true, true);
+              });
 
-  this.player.setVelocityY(-1000);
+              this.player.setVelocityY(-1000);
             }
           },
           null,
           this
         );
+
+        //colisao com moedas
+        this.physics.add.overlap(
+          this.player,
+          this.moedaGroup,
+          this.coletarMoeda,
+          null,
+          this
+        );
+
+        //colilider com bill bala
+        // PISAR no corpo principal (body) do Bill Bala → Bill morre
+        this.physics.add.overlap(
+          this.pisaoSensor,
+          this.bill,
+          this.matarBillPisado,
+          null,
+          this
+        );
+
+        // PISAR no sensor adicional (body2) → Bill morre
+        this.bill.children.iterate((billBala) => {
+          if (billBala.body2) {
+            this.physics.add.overlap(
+              this.pisaoSensor,
+              billBala.body2,
+              () => {
+                if (!this.isGameOver) {
+                  // remove o sensor extra
+                  billBala.body2.destroy();
+                  // desativa o Bill
+                  billBala.disableBody(true, true);
+                  // Mario quica
+                  this.player.setVelocityY(-1000);
+                }
+              },
+              null,
+              this
+            );
+          }
+        });
+
+        // COLISÃO lateral com corpo principal → Mario morre
+        this.physics.add.overlap(
+          this.player,
+          this.bill,
+          (player, bill) => {
+            const pisando = Phaser.Geom.Intersects.RectangleToRectangle(
+              this.pisaoSensor.getBounds(),
+              bill.getBounds()
+            );
+
+            if (!pisando && !this.isGameOver) {
+              this.onPlayerHitObstacle();
+            }
+          },
+          null,
+          this
+        );
+
+        // COLISÃO lateral com sensor adicional (body2) → Mario morre
+        this.bill.children.iterate((billBala) => {
+          if (billBala.body2) {
+            this.physics.add.overlap(
+              this.player,
+              billBala.body2,
+              () => {
+                const pisando = Phaser.Geom.Intersects.RectangleToRectangle(
+                  this.pisaoSensor.getBounds(),
+                  billBala.body2.getBounds()
+                );
+
+                if (!pisando && !this.isGameOver) {
+                  this.onPlayerHitObstacle();
+                }
+              },
+              null,
+              this
+            );
+          }
+        });
 
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setBounds(0, 0, 2000, 600);
@@ -314,8 +442,31 @@ export const Game = () => {
         );
       }
 
+      coletarMoeda(player, moeda) {
+        moeda.disableBody(true, true);
+        this.moedasColetadas += 1;
+        console.log(this.moedasColetadas);
+        this.textoMoeda.setText("Moedas: " + this.moedasColetadas);
+      }
+
+      matarBillPisado(sensor, bill) {
+        if (this.isGameOver) return;
+
+        // Desativa Bill Bala
+        bill.disableBody(true, true);
+
+        // Se tiver sensor extra (body2), destrói também
+        if (bill.body2 && bill.body2.destroy) {
+          bill.body2.destroy();
+          bill.body2 = null;
+        }
+
+        // Efeito do pulo do Mario
+        this.player.setVelocityY(-1200);
+      }
+
       onPlayerHitObstacle() {
-        if (this.isGameOver) return; // já morreu, não repete
+        if (this.isGameOver) return;
 
         this.isGameOver = true;
 
@@ -324,14 +475,25 @@ export const Game = () => {
             goomba.setVelocity(0, 0);
             goomba.body.moves = false;
           }
-
+          this.bill.setVelocityX(0)
           GameOver(this);
           this.physics.world.removeCollider(this.goombaCollider);
         });
       }
 
-
       update() {
+        if (!this.bill) return;
+
+        this.bill.children.iterate((billBala) => {
+          if (!billBala || !billBala.body) return;
+
+          const body2 = billBala.body2;
+          if (body2 && body2.body) {
+            body2.x = billBala.x + 60;
+            body2.y = billBala.y;
+          }
+        });
+
         if (!this.isGameOver) {
           Movimentacao(this);
         }
@@ -345,13 +507,13 @@ export const Game = () => {
             const touchingRight =
               goomba.body.blocked.right || goomba.body.touching.right;
 
-              if (touchingLeft) {
-                goomba.setVelocityX(100);
-                goomba.setFlipX(true); // olhando pra esquerda (se sua sprite sheet for assim)
-              } else if (touchingRight) {
-                goomba.setVelocityX(-100);
-                goomba.setFlipX(false); // olhando pra direita
-              }
+            if (touchingLeft) {
+              goomba.setVelocityX(100);
+              goomba.setFlipX(true); 
+            } else if (touchingRight) {
+              goomba.setVelocityX(-100);
+              goomba.setFlipX(false); 
+            }
           }
         });
 
@@ -374,7 +536,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: false,
+            debug: true,
           },
         },
         scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
