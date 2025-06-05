@@ -15,7 +15,7 @@ export default function Movimentacao(scene) {
    player.body.setOffset(0, 5);
    player.body.setSize(16, 12);
  } else if (!player.isAgachando && player.wasAgachado) {
-   player.y -= 2;
+   player.y -= 4;
 
    player.wasAgachado = false;
    player.body.setSize(16, 22);

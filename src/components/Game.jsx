@@ -23,6 +23,8 @@ export const Game = () => {
         this.load.image("chao", "/Chao.png");
         this.load.audio("temaYoshi", "/yoshi.mp3");
         this.load.image("Background", "/Background.png");
+        this.load.image("GroundTorto", "/GroundTorto.png");
+        this.load.image("Cano", "/Cano.png");
 
         this.load.spritesheet("SpriteSheetGoomba", "/SpriteSheetGoomba.png", {
           frameWidth: 16,
@@ -48,6 +50,10 @@ export const Game = () => {
             frameHeight: 22,
           }
         );
+        this.load.spritesheet("Ground", "/GroundSpriteSheet.png", {
+          frameWidth: 16,
+          frameHeight: 16,
+        });
       }
       geraFundo() {
         for (let i = 0; i < 5; i++) {
@@ -59,18 +65,60 @@ export const Game = () => {
             .setScrollFactor(0.1);
         }
       }
+      geraGrama(local) {
+        for (let i = 0; i < 3; i++) {
+          const chao = this.add.image(i * 48 + local, 468, "Ground", i + 6);
+          chao.setOrigin(0, 0);
+          chao.setScale(3);
+          chao.setDepth(0);
+        }
+      }
+      geraChao2(altura, quantidade, local) {
+        for (let i = 0; i < quantidade; i++) {
+          const chao = this.chaoGroup.create(i * 48 + local, altura, "Ground", 1);
+          chao.setOrigin(0, 0);
+          chao.setScale(3);
+          chao.setDepth(99)
+          chao.refreshBody();
+        }
+        while(altura < 552){
+          for (let i = 0; i < quantidade; i++) {
+          const chao = this.add.image(i * 48 + local, altura + 48, "Ground", 3);
+          chao.setOrigin(0, 0);
+          chao.setScale(3);
+          chao.setDepth(1)
+          
+        }
+        altura += 48;
+        }
+        
+      }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
-        for (let i = 0; i < 5; i++) {
-          const chao = this.chaoGroup.create(i * 900, 500, "chao");
-          chao.setOrigin(0, 0);
-          chao.setScale(0.75);
-          chao.refreshBody();
+        this.canoGroup = this.physics.add.staticGroup();
+
+        this.add.image(600, 250, "GroundTorto").setOrigin(0, 0).setScale(3);
+
+        this.geraChao2(510, 80, 0)
+
+        this.geraGrama(200);
+        this.geraGrama(1000);
+        this.geraGrama(1350);
+        this.geraGrama(2000);
+        this.geraGrama(2200);
+        this.geraChao2(300, 10, 2650)
+        this.cano = this.canoGroup.create(1490, 400, "Cano").setOrigin(0,0).setScale(3).refreshBody();
+        for (let i = 1; i < 3; i++) {
+          this.cano = this.canoGroup
+            .create(i * 120 + 2300, 500 - (i * 100), "Cano")
+            .setOrigin(0, 0)
+            .setScale(3)
+            .refreshBody();
         }
       }
       criaMoeda() {
         this.moedaGroup = this.physics.add.group();
-        for (let i = 1; i < 6; i++) {
+        for (let i = 1; i < 0; i++) {
           const moeda = this.moedaGroup.create(i * 300, 430, "Moedas");
           moeda.anims.play("animacaoMoeda");
           moeda.setImmovable(false);
@@ -81,7 +129,7 @@ export const Game = () => {
       }
       criagoomba() {
         this.goombaGroup = this.physics.add.group();
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 0; i++) {
           const goomba = this.goombaGroup.create(
             i * 300,
             430,
@@ -150,6 +198,7 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 1);
         this.player.setScale(3);
+        this.player.setDepth(2);
 
         // SENSOR DE PISÃO
         this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
@@ -167,10 +216,11 @@ export const Game = () => {
 
         this.physics.add.collider(this.goombaGroup, this.goombaGroup);
 
-        this.physics.world.setBounds(0, 0, 2000, 600);
+        this.physics.world.setBounds(0, 0, 3500, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.physics.add.collider(this.player, this.chaoGroup);
+        this.physics.add.collider(this.player, this.canoGroup);
         this.physics.add.collider(this.goombaGroup, this.chaoGroup);
 
         this.goombaCollider = this.physics.add.collider(
@@ -218,7 +268,7 @@ export const Game = () => {
         );
 
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setBounds(0, 0, 2000, 600);
+        this.cameras.main.setBounds(0, 0, 3500, 600);
 
         this.anims.create({
           key: "andandoFrente",
@@ -360,7 +410,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
+            // debug: true,
           },
         },
         scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
