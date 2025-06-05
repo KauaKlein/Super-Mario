@@ -76,7 +76,7 @@ export function GameOver(scene) {
             scene.restartText = scene.add
               .text(centerX, centerY + 100, "Reiniciar", {
                 fontFamily: "Super Mario",
-                fontSize: "32px",
+                fontSize: "28px",
                 color: "#ffffff",
                 backgroundColor: "#000000",
                 padding: { x: 20, y: 10 },
@@ -89,7 +89,7 @@ export function GameOver(scene) {
             scene.menuText = scene.add
               .text(centerX, centerY + 160, "Menu", {
                 fontFamily: "Super Mario",
-                fontSize: "32px",
+                fontSize: "28px",
                 color: "#ffffff",
                 backgroundColor: "#000000",
                 padding: { x: 20, y: 10 },
@@ -105,7 +105,7 @@ export function GameOver(scene) {
             scene.selector = scene.add
               .text(scene.menuOptions[0].x - 120, scene.menuOptions[0].y, "➤", {
                 fontFamily: "Super Mario",
-                fontSize: "32px",
+                fontSize: "28px",
                 color: "#ffff00",
               })
               .setOrigin(0.5)
@@ -145,7 +145,7 @@ export function GameOver(scene) {
                 if (scene.selectedOptionIndex === 0) {
                   scene.scene.restart();
                 } else if (scene.selectedOptionIndex === 1) {
-                  scene.scene.start("MenuScene");
+                  scene.scene.start("Menu");
                 }
               }
             };

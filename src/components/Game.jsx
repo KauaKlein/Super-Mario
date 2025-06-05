@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import MenuScene from "./MenuScene";
-import ConfigScene from "./ConfigScene";
+import Menu from "./Menu";
+import Config from "./Config";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
 import PreloadScene from "./PreloadScene";
-import PauseScene from "./PauseScene";
+import Pause from "./Pause";
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -110,6 +110,19 @@ export const Game = () => {
       }
 
       create() {
+        const musicaSalva = localStorage.getItem("config_musica");
+        const musicaIndex = musicaSalva !== null ? parseInt(musicaSalva) : 0;
+        const musicas = ["musica1", "musica2", "musica3"];
+
+        const volumeSalvo = parseInt(localStorage.getItem("config_volume"));
+        const volumeFinal = !isNaN(volumeSalvo) ? volumeSalvo / 10 : 0.5;
+
+        this.musicaDeFundo = this.sound.add(musicas[musicaIndex], {
+          volume: volumeFinal,
+          loop: true,
+        });
+
+        this.musicaDeFundo.play();
         this.anims.create({
           key: "goombaMovendo",
           frames: [
@@ -133,11 +146,23 @@ export const Game = () => {
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.keyboard.on("keydown-ESC", () => {
-          this.scene.launch("PauseScene");
+          this.scene.launch("Pause");
           this.scene.pause();
         });
         this.colidiuComgoomba = false;
         this.isGameOver = false;
+        this.pontuacao = 0;
+        this.textoPontuacao = this.add
+          .text(20, 20, "SCORE: 000", {
+            fontFamily: "Super Mario",
+            fontSize: "28px",
+            color: "#ffffff",
+            stroke: "#000000",
+            strokeThickness: 8,
+          })
+          .setScrollFactor(0)
+          .setDepth(999);
+
         this.criaMoeda();
         this.geraFundo();
         this.player = this.physics.add.sprite(
@@ -214,10 +239,10 @@ export const Game = () => {
               goomba.body.enable = false;
 
               this.time.delayedCall(300, () => {
-              goomba.disableBody(true, true);
-      });
+                goomba.disableBody(true, true);
+              });
 
-  this.player.setVelocityY(-1000);
+              this.player.setVelocityY(-1000);
             }
           },
           null,
@@ -236,7 +261,7 @@ export const Game = () => {
           frameRate: 12,
           repeat: -1,
         });
-        
+
         this.anims.create({
           key: "paradoFrente",
           frames: [{ key: "MiniMarioSpriteSheet", frame: 2 }],
@@ -330,7 +355,6 @@ export const Game = () => {
         });
       }
 
-
       update() {
         if (!this.isGameOver) {
           Movimentacao(this);
@@ -345,13 +369,13 @@ export const Game = () => {
             const touchingRight =
               goomba.body.blocked.right || goomba.body.touching.right;
 
-              if (touchingLeft) {
-                goomba.setVelocityX(100);
-                goomba.setFlipX(true); // olhando pra esquerda (se sua sprite sheet for assim)
-              } else if (touchingRight) {
-                goomba.setVelocityX(-100);
-                goomba.setFlipX(false); // olhando pra direita
-              }
+            if (touchingLeft) {
+              goomba.setVelocityX(100);
+              goomba.setFlipX(true); // olhando pra esquerda (se sua sprite sheet for assim)
+            } else if (touchingRight) {
+              goomba.setVelocityX(-100);
+              goomba.setFlipX(false); // olhando pra direita
+            }
           }
         });
 
@@ -373,7 +397,6 @@ export const Game = () => {
           width: 800,
           height: 600,
         },
-        backgroundColor: "#4488aa",
         physics: {
           default: "arcade",
           arcade: {
@@ -381,7 +404,7 @@ export const Game = () => {
             debug: false,
           },
         },
-        scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
+        scene: [PreloadScene, Menu, MainScene, Config, Pause],
         parent: gameRef.current,
       });
     }
