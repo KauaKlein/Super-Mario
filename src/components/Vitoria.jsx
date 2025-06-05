@@ -74,7 +74,7 @@ export function Vitoria(scene) {
 
     // Aguarda ENTER
     scene.input.keyboard.once("keydown-ENTER", () => {
-      scene.scene.start("MenuScene"); // Ou próxima fase, conforme seu jogo
+      scene.scene.start("Menu"); // Ou próxima fase, conforme seu jogo
     });
   });
 

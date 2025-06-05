@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import MenuScene from "./MenuScene";
-import ConfigScene from "./ConfigScene";
+import Menu from "./Menu";
+import Config from "./Config";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
 
@@ -170,7 +170,7 @@ export const Game = () => {
             debug: true,
           },
         },
-        scene: [MenuScene, MainScene, ConfigScene],
+        scene: [Menu, MainScene, Config],
         parent: gameRef.current,
       });
     }

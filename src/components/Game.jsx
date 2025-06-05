@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import MenuScene from "./MenuScene";
-import ConfigScene from "./ConfigScene";
+import Menu from "./Menu";
+import Config from "./Config";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
-import PreloadScene from "./PreloadScene";
-import PauseScene from "./PauseScene";
+import Preload from "./Preload";
+import Pause from "./Pause";
 import { Vitoria } from "./Vitoria";
 
 export const Game = () => {
@@ -247,7 +247,7 @@ export const Game = () => {
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.keyboard.on("keydown-ESC", () => {
-          this.scene.launch("PauseScene");
+          this.scene.launch("Pause");
           this.scene.pause();
         });
         this.colidiuComgoomba = false;
@@ -630,7 +630,7 @@ export const Game = () => {
             debug: true,
           },
         },
-        scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
+        scene: [Preload, Menu, MainScene, Config, Pause],
         parent: gameRef.current,
       });
     }

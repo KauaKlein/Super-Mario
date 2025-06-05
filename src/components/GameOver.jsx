@@ -145,7 +145,7 @@ export function GameOver(scene) {
                 if (scene.selectedOptionIndex === 0) {
                   scene.scene.restart();
                 } else if (scene.selectedOptionIndex === 1) {
-                  scene.scene.start("MenuScene");
+                  scene.scene.start("Menu");
                 }
               }
             };
