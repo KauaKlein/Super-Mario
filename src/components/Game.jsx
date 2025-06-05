@@ -284,7 +284,7 @@ export const Game = () => {
         this.player.setDepth(2);
 
         // SENSOR DE PISÃO
-        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 45);
         this.physics.add.existing(this.pisaoSensor);
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
@@ -590,7 +590,7 @@ export const Game = () => {
       }
 
       update() {
-        if (this.player.y > 540) {
+        if (this.player.y > 550) {
           GameOver(this);
         }
         if (!this.bill) return;
@@ -647,7 +647,7 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: false,
+            debug: true,
           },
         },
         scene: [Preload, Menu, MainScene, Config, Pause],
