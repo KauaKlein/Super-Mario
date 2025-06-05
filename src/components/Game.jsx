@@ -647,7 +647,6 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
           },
         },
         scene: [Preload, Menu, MainScene, Config, Pause],
