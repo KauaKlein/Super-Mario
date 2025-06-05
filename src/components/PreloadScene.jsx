@@ -8,7 +8,7 @@ export default class PreloadScene extends Phaser.Scene {
   preload() {
     this.cameras.main.setBackgroundColor("#20b2aa")
     this.add.text(320, 280, "Carregando...", {
-      fontFamily: "sans-serif",
+      fontFamily: "Super Mario",
       fontSize: "24px",
       color: "#ffffff"
     })
@@ -19,8 +19,7 @@ export default class PreloadScene extends Phaser.Scene {
 
     this.load.audio("musica1", "/menu.mp3")
     this.load.audio("musica2", "/yoshi.mp3")
-    this.load.audio("musica3", "/starroad.mp3")
-    this.load.audio("musica4", "/egg.mp3")
+    this.load.audio("musica3", "/egg.mp3")
   }
 
   create() {

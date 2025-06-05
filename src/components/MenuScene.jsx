@@ -11,13 +11,12 @@ export default class MenuScene extends Phaser.Scene {
     // Pré-carrega todas as possíveis músicas
     this.load.audio("musica1", "/menu.mp3")
     this.load.audio("musica2", "/yoshi.mp3")
-    this.load.audio("musica3", "/starroad.mp3")
-    this.load.audio("musica4", "/egg.mp3")
+    this.load.audio("musica3", "/egg.mp3")
   }
 
   create() {
     this.add.text(0, 0, ".", {
-      fontFamily: "sans-serif",
+      fontFamily: "Super Mario",
       fontSize: "1px"
     }).setAlpha(0)
     this.add.image(395, 295, "bgMenu").setScale(0.66)
@@ -28,7 +27,7 @@ export default class MenuScene extends Phaser.Scene {
     const volumeFinal = volumeSalvo !== null ? parseInt(volumeSalvo) / 10 : 0.5
     const musicaIndex = musicaSalva !== null ? parseInt(musicaSalva) : 0
 
-    const musicas = ["musica1", "musica2", "musica3", "musica4"]
+    const musicas = ["musica1", "musica2", "musica3"]
 
     this.musica = this.sound.add(musicas[musicaIndex], {
       volume: volumeFinal,
@@ -46,11 +45,11 @@ export default class MenuScene extends Phaser.Scene {
 
     this.textos = opcoes.map((texto, index) =>
       this.add.text(280, 310 + index * 60, texto, {
-        fontFamily: "sans-serif",
+        fontFamily: "Super Mario",
         fontSize: "32px",
         color: index === 0 ? "#ffff00" : "#ffffff",
         stroke: "#000000",
-        strokeThickness: 4,
+        strokeThickness: 7,
         shadow: {
           offsetX: 2,
           offsetY: 2,

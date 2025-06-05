@@ -25,7 +25,7 @@ export function Vitoria(scene) {
       fontSize: "48px",
       color: "#ffff00",
       stroke: "#000000",
-      strokeThickness: 6,
+      strokeThickness: 7,
       align: "center",
     })
     .setOrigin(0.5)
@@ -63,7 +63,7 @@ export function Vitoria(scene) {
     const continuar = scene.add
       .text(centerX, centerY + 80, "Pressione ENTER para continuar", {
         fontFamily: "Super Mario",
-        fontSize: "24px",
+        fontSize: "38px",
         color: "#ffffff",
         backgroundColor: "#000000",
         padding: { x: 15, y: 10 },

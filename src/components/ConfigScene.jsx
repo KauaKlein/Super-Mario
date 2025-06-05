@@ -10,13 +10,12 @@ export default class ConfigScene extends Phaser.Scene {
     this.load.image("bgConfig", "/Cenario.png");
     this.load.audio("musica1", "/menu.mp3");
     this.load.audio("musica2", "/yoshi.mp3");
-    this.load.audio("musica3", "/starroad.mp3");
-    this.load.audio("musica4", "/egg.mp3");
+    this.load.audio("musica3", "/egg.mp3");
   }
 
   create() {
     this.add.text(0, 0, ".", {
-      fontFamily: "sans-serif",
+      fontFamily: "Super Mario",
       fontSize: "1px"
     }).setAlpha(0)
     this.add.image(395, 295, "bgConfig").setScale(0.66);
@@ -27,8 +26,7 @@ export default class ConfigScene extends Phaser.Scene {
     this.musicas = [
       { key: "musica1", nome: "Tema Principal" },
       { key: "musica2", nome: "Tema Yoshi Island" },
-      { key: "musica3", nome: "Tema Star Road" },
-      { key: "musica4", nome: "Tema Easter Egg" },
+      { key: "musica3", nome: "Tema Easter Egg" },
     ];
 
     const volumeSalvo = localStorage.getItem("config_volume");
@@ -45,11 +43,11 @@ export default class ConfigScene extends Phaser.Scene {
 
     this.textos = this.opcoes.map((opcao, index) =>
       this.add.text(200, 200 + index * 50, "", {
-        fontFamily: "sans-serif",
+        fontFamily: "Super Mario",
         fontSize: "32px",
         color: "#ffffff",
         stroke: "#000000",
-        strokeThickness: 6,
+        strokeThickness: 7,
         shadow: {
           offsetX: 2,
           offsetY: 2,
@@ -61,11 +59,11 @@ export default class ConfigScene extends Phaser.Scene {
     );
 
     this.cursor = this.add.text(170, 200, "▶", {
-      fontFamily: "sans-serif",
+      fontFamily: "Super Mario",
       fontSize: "32px",
       color: "#ffff00",
       stroke: "#000000",
-      strokeThickness: 5
+      strokeThickness: 7
     });
 
     this.atualizaTexto();
