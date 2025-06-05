@@ -1,24 +1,19 @@
 import Phaser from "phaser";
 
-
-export default class ConfigScene extends Phaser.Scene {
+export default class Config extends Phaser.Scene {
   constructor() {
-    super("ConfigScene");
+    super("Config");
   }
 
   preload() {
     this.load.image("bgConfig", "/Cenario.png");
     this.load.audio("musica1", "/menu.mp3");
     this.load.audio("musica2", "/yoshi.mp3");
-    this.load.audio("musica3", "/starroad.mp3");
-    this.load.audio("musica4", "/egg.mp3");
+    this.load.audio("musica3", "/egg.mp3");
   }
 
-  create() {
-    this.add.text(0, 0, ".", {
-      fontFamily: "sans-serif",
-      fontSize: "1px"
-    }).setAlpha(0)
+  create(data) {
+    const cenaDeOrigem = data.voltarPara || "Menu";
     this.add.image(395, 295, "bgConfig").setScale(0.66);
 
     this.opcoes = ["Volume", "Música", "Salvar"];
@@ -27,8 +22,7 @@ export default class ConfigScene extends Phaser.Scene {
     this.musicas = [
       { key: "musica1", nome: "Tema Principal" },
       { key: "musica2", nome: "Tema Yoshi Island" },
-      { key: "musica3", nome: "Tema Star Road" },
-      { key: "musica4", nome: "Tema Easter Egg" },
+      { key: "musica3", nome: "Tema Easter Egg" },
     ];
 
     const volumeSalvo = localStorage.getItem("config_volume");
@@ -39,33 +33,33 @@ export default class ConfigScene extends Phaser.Scene {
 
     this.music = this.sound.add(this.musicas[this.musicaAtual].key, {
       volume: this.volume / 10,
-      loop: true
+      loop: true,
     });
     this.music.play();
 
     this.textos = this.opcoes.map((opcao, index) =>
       this.add.text(200, 200 + index * 50, "", {
-        fontFamily: "sans-serif",
-        fontSize: "32px",
+        fontFamily: "Super Mario",
+        fontSize: "28px",
         color: "#ffffff",
         stroke: "#000000",
-        strokeThickness: 6,
+        strokeThickness: 8,
         shadow: {
           offsetX: 2,
           offsetY: 2,
           color: "#000000",
           blur: 2,
-          fill: true
-        }
+          fill: true,
+        },
       })
     );
 
     this.cursor = this.add.text(170, 200, "▶", {
-      fontFamily: "sans-serif",
-      fontSize: "32px",
+      fontFamily: "Super Mario",
+      fontSize: "28px",
       color: "#ffff00",
       stroke: "#000000",
-      strokeThickness: 5
+      strokeThickness: 8,
     });
 
     this.atualizaTexto();
@@ -75,22 +69,33 @@ export default class ConfigScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-LEFT", () => this.ajustarValor(-1));
     this.input.keyboard.on("keydown-RIGHT", () => this.ajustarValor(1));
 
-   this.input.keyboard.on("keydown-ENTER", () => {
+    this.input.keyboard.on("keydown-ENTER", () => {
       if (this.opcaoSelecionada === 2) {
         // Salva e retorna ao menu
-        localStorage.setItem("config_volume", this.volume);
-        localStorage.setItem("config_musica", this.musicaAtual);
+        localStorage.setItem("config_volume", `${this.volume}`);
+        localStorage.setItem("config_musica", `${this.musicaAtual}`);
         this.music.stop();
-        this.scene.start("MenuScene");
+        this.scene.stop();
+        this.scene.resume("Pause");
       }
     });
 
-    this.input.keyboard.on("keydown-ESC", () => {
+    this.input.keyboard.on("keydown-F", () => {
       this.music.stop();
-      this.scene.start("MenuScene");
+      this.scene.stop();
+      this.scene.launch(cenaDeOrigem);
+    });
+
+    this.input.keyboard.on("keydown-ENTER", () => {
+      if (this.opcaoSelecionada === 2) {
+        localStorage.setItem("config_volume", this.volume);
+        localStorage.setItem("config_musica", this.musicaAtual);
+        this.music.stop();
+        this.scene.stop();
+        this.scene.launch(cenaDeOrigem);
+      }
     });
   }
-
   mudaOpcao(delta) {
     this.opcaoSelecionada = Phaser.Math.Wrap(
       this.opcaoSelecionada + delta,
@@ -114,7 +119,7 @@ export default class ConfigScene extends Phaser.Scene {
       );
       this.music = this.sound.add(this.musicas[this.musicaAtual].key, {
         volume: this.volume / 10,
-        loop: true
+        loop: true,
       });
       this.music.play();
     }

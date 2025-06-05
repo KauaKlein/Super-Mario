@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import MenuScene from "./MenuScene";
-import ConfigScene from "./ConfigScene";
+import Menu from "./Menu";
+import Config from "./Config";
 import { GameOver } from "./GameOver";
 import Movimentacao from "./Movimentacao";
-import PreloadScene from "./PreloadScene";
-import PauseScene from "./PauseScene";
+import Preload from "./Preload";
+import Pause from "./Pause";
+import { Vitoria } from "./Vitoria";
 
 export const Game = () => {
   const gameRef = useRef(null);
@@ -21,8 +22,11 @@ export const Game = () => {
         this.load.image("game", "/game.png");
         this.load.image("over", "/over.png");
         this.load.image("chao", "/Chao.png");
-        this.load.audio("temaYoshi", "/yoshi.mp3");
+        this.load.audio("musica1", "/menu.mp3");
         this.load.image("Background", "/Background.png");
+        this.load.image("GroundTorto", "/GroundTorto.png");
+        this.load.image("Cano", "/Cano.png");
+        this.load.image("PosteFinal", "/PosteFinal.png");
 
         this.load.spritesheet("SpriteSheetBillBullet", "/BillBullet.png", {
           frameWidth: 63,
@@ -53,6 +57,10 @@ export const Game = () => {
             frameHeight: 22,
           }
         );
+        this.load.spritesheet("Ground", "/GroundSpriteSheet.png", {
+          frameWidth: 16,
+          frameHeight: 16,
+        });
       }
       geraFundo() {
         for (let i = 0; i < 5; i++) {
@@ -64,29 +72,89 @@ export const Game = () => {
             .setScrollFactor(0.1);
         }
       }
+      geraGrama(local) {
+        for (let i = 0; i < 3; i++) {
+          const chao = this.add.image(i * 48 + local, 468, "Ground", i + 6);
+          chao.setOrigin(0, 0);
+          chao.setScale(3);
+          chao.setDepth(0);
+        }
+      }
+      geraChao2(altura, quantidade, local) {
+        for (let i = 0; i < quantidade; i++) {
+          const chao = this.chaoGroup.create(
+            i * 48 + local,
+            altura,
+            "Ground",
+            1
+          );
+          chao.setOrigin(0, 0);
+          chao.setScale(3);
+          chao.setDepth(99);
+          chao.refreshBody();
+        }
+        while (altura < 552) {
+          for (let i = 0; i < quantidade; i++) {
+            const chao = this.add.image(
+              i * 48 + local,
+              altura + 48,
+              "Ground",
+              3
+            );
+            chao.setOrigin(0, 0);
+            chao.setScale(3);
+            chao.setDepth(1);
+          }
+          altura += 48;
+        }
+      }
       geraChao() {
         this.chaoGroup = this.physics.add.staticGroup();
-        for (let i = 0; i < 5; i++) {
-          const chao = this.chaoGroup.create(i * 900, 500, "chao");
-          chao.setOrigin(0, 0);
-          chao.setScale(0.75);
-          chao.refreshBody();
+        this.canoGroup = this.physics.add.staticGroup();
+
+        this.add.image(600, 250, "GroundTorto").setOrigin(0, 0).setScale(3);
+
+        this.geraChao2(510, 80, 0);
+
+        this.geraGrama(200);
+        this.geraGrama(1000);
+        this.geraGrama(1350);
+        this.geraGrama(2000);
+        this.geraGrama(2200);
+        this.geraChao2(300, 10, 2650);
+        this.geraChao2(480, 2, 3842);
+        this.geraChao2(450, 2, 3938);
+        this.geraChao2(420, 2, 4034);
+        this.geraChao2(390, 2, 4130);
+        this.geraChao2(510, 5, 4314);
+
+        this.cano = this.canoGroup
+          .create(1490, 400, "Cano")
+          .setOrigin(0, 0)
+          .setScale(3)
+          .refreshBody();
+        for (let i = 1; i < 3; i++) {
+          this.cano = this.canoGroup
+            .create(i * 120 + 2300, 500 - i * 100, "Cano")
+            .setOrigin(0, 0)
+            .setScale(3)
+            .refreshBody();
         }
       }
       criaMoeda() {
         this.moedaGroup = this.physics.add.group();
-        for (let i = 1; i < 6; i++) {
-          const moeda = this.moedaGroup.create(i * 300, 430, "Moedas");
+        for (let i = 1; i < 8; i++) {
+          const moeda = this.moedaGroup.create(i * 500, 360, "Moedas");
           moeda.anims.play("animacaoMoeda");
           moeda.body.allowGravity = false;
           moeda.setScale(3);
-          moeda.setDepth(1);
+          moeda.setDepth(2);
         }
       }
       criaBill() {
         this.bill = this.physics.add.group();
         const billBala = this.bill.create(
-          1800,
+          3000,
           360,
           "SpriteSheetBillBullet",
           0
@@ -129,7 +197,7 @@ export const Game = () => {
           );
           goomba.anims.play("goombaMovendo");
           goomba.setScale(3);
-          goomba.setOrigin(0.5, 1);
+          goomba.setOrigin(-20, 1);
           goomba.setVelocityX(-150);
           goomba.setCollideWorldBounds(true);
           goomba.setBounce(0);
@@ -154,6 +222,12 @@ export const Game = () => {
           fontSize: "32px",
           fill: "#fff",
         });
+        this.pontuacao = 0;
+        this.musica = this.sound.add("musica1", {
+        loop: true,
+        volume: 0.3,
+        });
+        this.musica.play();
         this.textoMoeda.setScrollFactor(0);
 
         this.anims.create({
@@ -179,11 +253,22 @@ export const Game = () => {
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.keyboard.on("keydown-ESC", () => {
-          this.scene.launch("PauseScene");
+          this.scene.launch("Pause");
           this.scene.pause();
         });
         this.colidiuComgoomba = false;
         this.isGameOver = false;
+        this.textoPontuacao = this.add
+          .text(20, 20, "SCORE: 000", {
+            fontFamily: "Super Mario",
+            fontSize: "28px",
+            color: "#ffffff",
+            stroke: "#000000",
+            strokeThickness: 8,
+          })
+          .setScrollFactor(0)
+          .setDepth(999);
+
         this.criaMoeda();
         this.geraFundo();
         this.player = this.physics.add.sprite(
@@ -196,13 +281,14 @@ export const Game = () => {
         this.player.setBounce(0);
         this.player.setOrigin(0, 1);
         this.player.setScale(3);
-        
+        this.player.setDepth(2);
+
         // SENSOR DE PISÃO
-        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 35);
+        this.pisaoSensor = this.add.rectangle(0, 0, this.player.width * 3, 45);
         this.physics.add.existing(this.pisaoSensor);
         this.pisaoSensor.body.allowGravity = false;
         this.pisaoSensor.body.setImmovable(true);
-        
+
         this.player.setMaxVelocity(500, 1600);
         this.player.setDragX(2000);
         this.player.isAgachado = false;
@@ -214,11 +300,30 @@ export const Game = () => {
 
         this.physics.add.collider(this.goombaGroup, this.goombaGroup);
 
-        this.physics.world.setBounds(0, 0, 2000, 600);
+        this.physics.world.setBounds(0, 0, 4500, 600);
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.physics.add.collider(this.player, this.chaoGroup);
+        this.physics.add.collider(this.player, this.canoGroup);
+        this.physics.add.collider(this.goombaGroup, this.canoGroup);
         this.physics.add.collider(this.goombaGroup, this.chaoGroup);
+
+        //bandeira final
+        this.poste = this.physics.add.staticImage(4400, 380, "PosteFinal");
+        this.poste.setScale(2);
+        this.poste.refreshBody();
+
+        // Adiciona o overlap entre o jogador e o poste
+        this.physics.add.overlap(
+          this.player,
+          this.poste,
+          () => {
+            this.physics.world.disable(this.player);
+            Vitoria(this); 
+          },
+          null,
+          this
+        );
 
         this.goombaCollider = this.physics.add.collider(
           this.player,
@@ -353,7 +458,7 @@ export const Game = () => {
         });
 
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setBounds(0, 0, 2000, 600);
+        this.cameras.main.setBounds(0, 0, 4500, 600);
 
         this.anims.create({
           key: "andandoFrente",
@@ -445,10 +550,13 @@ export const Game = () => {
       coletarMoeda(player, moeda) {
         moeda.disableBody(true, true);
         this.moedasColetadas += 1;
-        console.log(this.moedasColetadas);
-        this.textoMoeda.setText("Moedas: " + this.moedasColetadas);
-      }
+        this.pontuacao += 10;
 
+        this.textoMoeda.setText("Moedas: " + this.moedasColetadas);
+
+        const textoFormatado = String(this.pontuacao).padStart(3, "0");
+        this.textoPontuacao.setText("SCORE: " + textoFormatado);
+      }
       matarBillPisado(sensor, bill) {
         if (this.isGameOver) return;
 
@@ -475,13 +583,16 @@ export const Game = () => {
             goomba.setVelocity(0, 0);
             goomba.body.moves = false;
           }
-          this.bill.setVelocityX(0)
+          this.bill.setVelocityX(0);
           GameOver(this);
           this.physics.world.removeCollider(this.goombaCollider);
         });
       }
 
       update() {
+        if (this.player.y > 550) {
+          GameOver(this);
+        }
         if (!this.bill) return;
 
         this.bill.children.iterate((billBala) => {
@@ -509,10 +620,10 @@ export const Game = () => {
 
             if (touchingLeft) {
               goomba.setVelocityX(100);
-              goomba.setFlipX(true); 
+              goomba.setFlipX(true);
             } else if (touchingRight) {
               goomba.setVelocityX(-100);
-              goomba.setFlipX(false); 
+              goomba.setFlipX(false);
             }
           }
         });
@@ -536,10 +647,9 @@ export const Game = () => {
           default: "arcade",
           arcade: {
             gravity: { y: 5000 },
-            debug: true,
           },
         },
-        scene: [PreloadScene, MenuScene, MainScene, ConfigScene, PauseScene],
+        scene: [Preload, Menu, MainScene, Config, Pause],
         parent: gameRef.current,
       });
     }
