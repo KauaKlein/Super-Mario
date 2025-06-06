@@ -224,8 +224,8 @@ export const Game = () => {
         });
         this.pontuacao = 0;
         this.musica = this.sound.add("musica1", {
-        loop: true,
-        volume: 0.3,
+          loop: true,
+          volume: 0.3,
         });
         this.musica.play();
         this.textoMoeda.setScrollFactor(0);
@@ -319,7 +319,8 @@ export const Game = () => {
           this.poste,
           () => {
             this.physics.world.disable(this.player);
-            Vitoria(this); 
+            this.musica.pause();
+            Vitoria(this);
           },
           null,
           this
@@ -584,6 +585,7 @@ export const Game = () => {
             goomba.body.moves = false;
           }
           this.bill.setVelocityX(0);
+          this.musica.pause();
           GameOver(this);
           this.physics.world.removeCollider(this.goombaCollider);
         });

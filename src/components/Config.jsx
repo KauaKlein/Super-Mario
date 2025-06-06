@@ -127,7 +127,9 @@ export default class Config extends Phaser.Scene {
   }
 
   atualizaTexto() {
-    this.textos[0].setText(`Volume: ${this.volume}`);
+    this.textos[0].setText(
+      `Volume: ${"■".repeat(this.volume)}${"□".repeat(10 - this.volume)}`
+    );
     this.textos[1].setText(`Música: ${this.musicas[this.musicaAtual].nome}`);
     this.textos[2].setText("Salvar");
   }
