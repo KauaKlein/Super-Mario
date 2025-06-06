@@ -144,7 +144,7 @@ export const Game = () => {
       criaMoeda() {
         this.moedaGroup = this.physics.add.group();
         for (let i = 1; i < 8; i++) {
-          const moeda = this.moedaGroup.create(i * 500, 360, "Moedas");
+          const moeda = this.moedaGroup.create(i * 500, 370, "Moedas");
           moeda.anims.play("animacaoMoeda");
           moeda.body.allowGravity = false;
           moeda.setScale(3);
@@ -188,9 +188,9 @@ export const Game = () => {
 
       criagoomba() {
         this.goombaGroup = this.physics.add.group();
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 7; i++) {
           const goomba = this.goombaGroup.create(
-            i * 300,
+            i * 305,
             430,
             "SpriteSheetGoomba",
             0
@@ -202,6 +202,7 @@ export const Game = () => {
           goomba.setCollideWorldBounds(true);
           goomba.setBounce(0);
           goomba.setImmovable(false);
+          goomba.setDepth(2);
 
           const originalWidth = goomba.width;
           const originalHeight = goomba.height;
@@ -225,7 +226,7 @@ export const Game = () => {
         this.pontuacao = 0;
         this.musica = this.sound.add("musica1", {
           loop: true,
-          volume: 0.3,
+          volume: 0.09,
         });
         this.musica.play();
         this.textoMoeda.setScrollFactor(0);
@@ -593,6 +594,7 @@ export const Game = () => {
 
       update() {
         if (this.player.y > 550) {
+          this.musica.pause();
           GameOver(this);
         }
         if (!this.bill) return;
